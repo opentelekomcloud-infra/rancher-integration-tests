@@ -1,10 +1,11 @@
 ---
 - job:
     name: rancher-kontainer-integration
+    parent: tox-py38
     description: |
       Run Functional tests of the driver on Rancher+OTC.
-    pre-run: playbooks/rancher-kontainer/pre.yaml
-    run: playbooks/rancher-kontainer/run.yaml
+      #    pre-run: playbooks/rancher-kontainer/pre.yaml
+      #run: playbooks/rancher-kontainer/run.yaml
     vars:
       functest_project_name: "eu-de_zuul_rancher"
       rancher_image: rancher/rancher:v2.4.8
@@ -20,4 +21,9 @@
       - opentelekomcloud/kontainer-engine-driver-otc
       - opentelekomcloud/ui-cluster-driver-otc
 
+
+- project:
+    check:
+      jobs:
+        - rancher-kontainer-integration
 
