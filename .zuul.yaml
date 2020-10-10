@@ -17,9 +17,9 @@
       nodes:
         - name: rancher
           label: ubuntu-focal
-    required-projects:
-      - opentelekomcloud/kontainer-engine-driver-otc
-      - opentelekomcloud/ui-cluster-driver-otc
+            #    required-projects:
+            #      - opentelekomcloud/kontainer-engine-driver-otc
+            #      - opentelekomcloud/ui-cluster-driver-otc
 
 
 - project:
