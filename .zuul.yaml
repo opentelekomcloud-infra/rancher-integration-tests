@@ -25,6 +25,5 @@
 - project:
     check:
       jobs:
-        - tox-py38
-          # - rancher-kontainer-integration
+        - rancher-kontainer-integration
 
