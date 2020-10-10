@@ -3,6 +3,9 @@
 rancher_image: rancher/rancher
 selenium_chrome_image: selenium/standalone-chrome
 
+rancher_env:
+  RANCHER_PASSWORD: dummy
+
 packages:
   - pytest
   - selenium

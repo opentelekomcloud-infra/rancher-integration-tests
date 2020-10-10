@@ -29,7 +29,7 @@ class TestAddclusterdriver():
       # Test name: add-cluster-driver
       # Step # | name | target | value
       # 1 | open | /login |
-      self.driver.get("https://%s/n/drivers/cluster" % os.environ.get('RANCHER_BIND_HOST'))
+      self.driver.get("https://%s:8443/n/drivers/cluster" % os.environ.get('RANCHER_BIND_HOST'))
       # 2 | setWindowSize | 1552x840 |
       self.driver.set_window_size(1552, 840)
       # 3 | type | id=login-username-local | admin
