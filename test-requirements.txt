@@ -2,3 +2,4 @@ ansible-base
 pytest
 selenium
 docker-py
+flake8

@@ -5,9 +5,16 @@
     parent: tox
     description: |
       Run Rancher/Selenium and register kontainer driver
+    pre-run: playbooks/rancher-kontainer/pre.yaml
     vars:
       tox_envlist: register
       python_version: 3.8
+
+- job:
+    name: rancher-register-driver-latest
+    parent: rancher-register-driver
+    description: |
+      Test the latest released artifacts
 
 - job:
     name: rancher-kontainer-integration
@@ -36,5 +43,5 @@
     check:
       jobs:
         - tox-pep8
-        - rancher-register-driver
+        - rancher-register-driver-latest
 
