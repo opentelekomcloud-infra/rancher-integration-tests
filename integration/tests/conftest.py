@@ -58,6 +58,7 @@ def rancher_conf():
 def selenium_driver(rancher_conf):
     capability = DesiredCapabilities.CHROME
     capability['acceptInsecureCerts'] = True
+    print(rancher_conf.selenium_port)
     driver = webdriver.Remote(
         command_executor='http://%s:%s/wd/hub' % (
             rancher_conf.bind_host, rancher_conf.selenium_port),

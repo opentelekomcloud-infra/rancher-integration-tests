@@ -25,3 +25,11 @@
         cacheable: true
         tox_environment:
           RANCHER_BIND_HOST: "{{ ansible_default_ipv4.address }}"
+    - name: Allow required port on zuul iptables
+      become: yes
+      iptables:
+        chain: INPUT
+        action: insert
+        jump: ACCEPT
+        protocol: tcp
+        destination_port: 8003
