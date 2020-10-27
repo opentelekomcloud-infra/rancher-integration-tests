@@ -3,7 +3,7 @@
 
 - name: Set facts
   set_fact:
-    bind_host: "{{ ansible_default_ipv4.address }}"
+    bind_host: "{{ lookup('env', 'RANCHER_BIND_HOST') | default(ansible_default_ipv4.address, True) }}"
     rancher_port: "{{ lookup('env', 'RANCHER_PORT') | default('8003', True) }}"
     selenium_port: "{{ lookup('env', 'SELENIUM_PORT') | default('8004', True) }}"
 
