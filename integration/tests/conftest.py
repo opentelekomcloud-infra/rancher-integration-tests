@@ -27,7 +27,12 @@ def rancher_conf():
     obj.password = 'abc'
     obj.bind_host = os.environ.get('RANCHER_BIND_HOST')
     if not obj.bind_host:
-        obj.bind_host = socket.gethostbyname(socket.gethostname())
+        try:
+            obj.bind_host = socket.gethostbyname(socket.gethostname())
+        except socket.gaierror:
+            cmd = ("ifconfig | sed -En 's/127.0.0.1//;"
+                   "s/.*inet (addr:)?(([0-9]*\\.){3}[0-9]*).*/\2/p")
+            obj.bind_host = os.popen(cmd).read()
 
     obj.rancher_port = os.environ.get('RANCHER_PORT', '443')
     obj.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
