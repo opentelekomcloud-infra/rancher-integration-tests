@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import os
+import socket
 import pytest
 
 from selenium import webdriver
@@ -25,6 +26,8 @@ def rancher_conf():
     obj = RancherConfig()
     obj.password = 'abc'
     obj.bind_host = os.environ.get('RANCHER_BIND_HOST')
+    if not obj.bind_host:
+        obj.bind_host = socket.gethostbyname(socket.gethostname())
 
     obj.rancher_port = os.environ.get('RANCHER_PORT', '443')
     obj.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
