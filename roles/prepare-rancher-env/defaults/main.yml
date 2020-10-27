@@ -3,22 +3,25 @@
 rancher_image: rancher/rancher:v2.4.8
 selenium_chrome_image: selenium/standalone-chrome
 
+bind_host: "{{ ansible_default_ipv4.address }}"
+rancher_port: 8003
+selenium_port: 8004
+rancher_password: dummy_pass
+
 rancher_env:
   RANCHER_PASSWORD: dummy
 
 packages:
-  - pytest
-  - selenium
   - docker
 
-rancher_prefix: rancher-
-
-rancher_driver_location: "https://otc-rancher.obs.eu-de.otc.t-systems.com/cluster/driver/latest/kontainer-engine-driver-otccce_linux_amd64.tar.gz"
-rancher_ui_location: "https://otc-rancher.obs.eu-de.otc.t-systems.com/cluster/ui/latest/component.js"
-rancher_whitelist: "*.otc.t-systems.com"
-
-rancher_cce_cluster_name: rancher-test-cce-cluster
-
-rancher_cce_vpc_name: "{{ (rancher_prefix + 'otc-vpc-router') }}"
-rancher_cce_subnet_name: "{{ (rancher_prefix + 'default-subnet') }}"
-rancher_cce_keypair_name: "{{ (rancher_prefix + 'KeyPair') }}"
+# rancher_prefix: rancher-
+# 
+# rancher_driver_location: "https://otc-rancher.obs.eu-de.otc.t-systems.com/cluster/driver/latest/kontainer-engine-driver-otccce_linux_amd64.tar.gz"
+# rancher_ui_location: "https://otc-rancher.obs.eu-de.otc.t-systems.com/cluster/ui/latest/component.js"
+# rancher_whitelist: "*.otc.t-systems.com"
+# 
+# rancher_cce_cluster_name: rancher-test-cce-cluster
+# 
+# rancher_cce_vpc_name: "{{ (rancher_prefix + 'otc-vpc-router') }}"
+# rancher_cce_subnet_name: "{{ (rancher_prefix + 'default-subnet') }}"
+# rancher_cce_keypair_name: "{{ (rancher_prefix + 'KeyPair') }}"

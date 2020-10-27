@@ -5,9 +5,6 @@
     state: present
     name: "{{ packages }}"
 
-      # - name: Include rancher env variables
-      # include_vars: rancher_env.yml
-
 - name: Allow required port on zuul iptables
   become: yes
   iptables:
@@ -16,12 +13,6 @@
     jump: ACCEPT
     protocol: tcp
     destination_port: 8003
-
-- name: Set facts
-  set_fact:
-    bind_host: "{{ lookup('env', 'RANCHER_BIND_HOST') | default(ansible_default_ipv4.address, True) }}"
-    rancher_port: "{{ lookup('env', 'RANCHER_PORT') | default('8003', True) }}"
-    selenium_port: "{{ lookup('env', 'SELENIUM_PORT') | default('8004', True) }}"
 
 - name: Start Rancher container
   docker_container:
