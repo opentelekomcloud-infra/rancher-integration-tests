@@ -10,9 +10,9 @@
 
 - hosts: all
   roles:
-    # - ensure-python
-    # - ensure-virtualenv
-    # - ensure-pip
+    - ensure-python
+    - ensure-virtualenv
+    - ensure-pip
     - ensure-docker
     - ensure-go
     - ensure-goreleaser
@@ -25,11 +25,8 @@
         cacheable: true
         tox_environment:
           RANCHER_BIND_HOST: "{{ ansible_default_ipv4.address }}"
-    - name: Allow required port on zuul iptables
-      become: yes
-      iptables:
-        chain: INPUT
-        action: insert
-        jump: ACCEPT
-        protocol: tcp
-        destination_port: 8003
+    - name: Deploy rancher/selenium
+      include_role:
+        name: prepare-rancher-env
+      vars:
+        rancher_password: dummy_pass

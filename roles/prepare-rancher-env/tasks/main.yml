@@ -1,5 +1,21 @@
 ---
 # tasks file for prepare-rancher-env
+- name: Install required pip packages
+  pip:
+    state: present
+    name: "{{ packages }}"
+
+      # - name: Include rancher env variables
+      # include_vars: rancher_env.yml
+
+- name: Allow required port on zuul iptables
+  become: yes
+  iptables:
+    chain: INPUT
+    action: insert
+    jump: ACCEPT
+    protocol: tcp
+    destination_port: 8003
 
 - name: Set facts
   set_fact:
@@ -8,7 +24,7 @@
     selenium_port: "{{ lookup('env', 'SELENIUM_PORT') | default('8004', True) }}"
 
 - name: Start Rancher container
-  community.general.docker_container:
+  docker_container:
     name: rancher
     image: "{{ rancher_image }}"
     published_ports:
@@ -21,7 +37,7 @@
   register: rancher_container
 
 - name: Start Selenium CHROME container
-  community.general.docker_container:
+  docker_container:
     name: selenium-chrome
     image: "{{ selenium_chrome_image }}"
     published_ports:
