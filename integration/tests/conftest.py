@@ -30,9 +30,11 @@ def rancher_conf():
         try:
             obj.bind_host = socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
-            cmd = ("ifconfig | sed -En 's/127.0.0.1//;"
-                   "s/.*inet (addr:)?(([0-9]*\\.){3}[0-9]*).*/\2/p")
+            cmd = ("ip route | grep default | sed -En 's/.*(via )"
+                   "(([0-9]*\\.){3}[0-9]*).*/\2/p'")
             obj.bind_host = os.popen(cmd).read()
+            print('Using %s as bind_host' % obj.bind_host)
+    print('Using %s as bind_host' % obj.bind_host)
 
     obj.rancher_port = os.environ.get('RANCHER_PORT', '443')
     obj.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
