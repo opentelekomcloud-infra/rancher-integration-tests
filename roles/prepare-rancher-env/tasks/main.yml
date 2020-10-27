@@ -20,7 +20,7 @@
     image: "{{ rancher_image }}"
     published_ports:
       - "{{ rancher_port }}:443"
-    container_default_behavior: no_defaults
+    # container_default_behavior: no_defaults
     restart_policy: unless-stopped
     detach: yes
     privileged: yes
@@ -33,7 +33,7 @@
     image: "{{ selenium_chrome_image }}"
     published_ports:
       - "{{ selenium_port }}:4444"
-    container_default_behavior: no_defaults
+    # container_default_behavior: no_defaults
     restart_policy: unless-stopped
     detach: yes
     pull: yes
