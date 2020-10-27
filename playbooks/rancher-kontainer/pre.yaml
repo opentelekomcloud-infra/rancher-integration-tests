@@ -17,3 +17,11 @@
     - ensure-go
     - ensure-goreleaser
     - ensure-javascript-build-tool
+
+- hosts: all
+  tasks:
+    - name: set fact
+      set_fact:
+        cacheable: true
+        tox_environment:
+          RANCHER_BIND_HOST: "{{ ansible_default_ipv4.address }}"
