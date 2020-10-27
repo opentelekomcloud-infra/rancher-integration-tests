@@ -1,4 +1,14 @@
 ---
+
+- job:
+    name: rancher-register-driver
+    parent: tox
+    description: |
+      Run Rancher/Selenium and register kontainer driver
+    vars:
+      tox_envlist: register
+      python_version: 3.8
+
 - job:
     name: rancher-kontainer-integration
     parent: tox-py38
@@ -25,5 +35,6 @@
 - project:
     check:
       jobs:
-        - rancher-kontainer-integration
+        - tox-pep8
+        - rancher-register-driver
 

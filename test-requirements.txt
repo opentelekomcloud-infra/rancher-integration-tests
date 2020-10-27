@@ -1,4 +1,4 @@
-ansible
+ansible-base
 pytest
 selenium
 docker-py
