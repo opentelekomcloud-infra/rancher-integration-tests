@@ -51,6 +51,10 @@ def rancher_conf():
     obj.vpc_name = os.environ.get('RANCHER_CCE_VPC_NAME')
     obj.subnet_name = os.environ.get('RANCHER_CCE_SUBNET_NAME')
     obj.cce_keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
+    print('Using %s and %s as drivers' % (
+        obj.kontainer_driver_location,
+        obj.kontainer_driver_ui_location)
+    )
     yield obj
 
 

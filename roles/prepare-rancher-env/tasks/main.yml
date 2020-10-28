@@ -4,6 +4,8 @@
   pip:
     state: present
     name: "{{ packages }}"
+  tags: 
+    - packages
 
 - name: Allow required port on zuul iptables
   become: yes
@@ -13,6 +15,8 @@
     jump: ACCEPT
     protocol: tcp
     destination_port: 8003
+  tags:
+    - iptables
 
 - name: Start Rancher container
   docker_container:
@@ -26,6 +30,8 @@
     privileged: yes
     pull: yes
   register: rancher_container
+  tags:
+    - rancher
 
 - name: Start Selenium CHROME container
   docker_container:
@@ -38,6 +44,7 @@
     detach: yes
     pull: yes
   register: selenium_container
+  tags: selenium
 
 - name: Get default rancher login token
   uri:
@@ -53,6 +60,8 @@
   retries: 10
   delay: 10
   failed_when: login_result.status not in [201]
+  tags:
+    - rancher_change_pwd
 
 - name: Set rancher URL
   uri:
@@ -70,6 +79,7 @@
   retries: 3
   delay: 10
   failed_when: url_result.status not in [200]
+  tags: rancher_change_pwd
 
 - name: Set rancher password
   uri:
@@ -87,3 +97,4 @@
   retries: 3
   delay: 10
   failed_when: password_result.status not in [200]
+  tags: rancher_change_pwd

@@ -22,7 +22,7 @@
     abstract: true
     vars:
       # Building ui driver
-      node_version: 10
+      node_version: 14
       kontainer_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/kontainer-engine-driver-otc'].src_dir }}"
       ui_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/ui-cluster-driver-otc'].src_dir }}"
     nodeset:
