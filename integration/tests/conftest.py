@@ -34,7 +34,6 @@ def rancher_conf():
                    "(([0-9]*\\.){3}[0-9]*).*/\2/p'")
             obj.bind_host = os.popen(cmd).read()
             print('Using %s as bind_host' % obj.bind_host)
-    print('Using %s as bind_host' % obj.bind_host)
 
     obj.rancher_port = os.environ.get('RANCHER_PORT', '443')
     obj.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
@@ -51,10 +50,6 @@ def rancher_conf():
     obj.vpc_name = os.environ.get('RANCHER_CCE_VPC_NAME')
     obj.subnet_name = os.environ.get('RANCHER_CCE_SUBNET_NAME')
     obj.cce_keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
-    print('Using %s and %s as drivers' % (
-        obj.kontainer_driver_location,
-        obj.kontainer_driver_ui_location)
-    )
     yield obj
 
 
@@ -62,7 +57,6 @@ def rancher_conf():
 def selenium_driver(rancher_conf):
     capability = DesiredCapabilities.CHROME
     capability['acceptInsecureCerts'] = True
-    print(rancher_conf.selenium_port)
     driver = webdriver.Remote(
         command_executor='http://%s:%s/wd/hub' % (
             rancher_conf.bind_host, rancher_conf.selenium_port),
