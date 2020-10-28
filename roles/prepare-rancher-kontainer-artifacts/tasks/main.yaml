@@ -3,6 +3,7 @@
     name: goreleaser
   vars:
     goreleaser_args: "{{ kontainer_build_args }}"
+    goreleaser_project_src_dir: "{{ kontainer_project_src_dir }}"
 
 - name: Find tarballs in artifacts directory
   find:
