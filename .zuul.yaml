@@ -25,11 +25,11 @@
       node_version: 14
       kontainer_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/kontainer-engine-driver-otc'].src_dir }}"
       ui_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/ui-cluster-driver-otc'].src_dir }}"
-    nodeset:
-      nodes:
-        - name: rancher
-          # node 10 exists from focal
-          label: ubuntu-focal
+        #    nodeset:
+        #      nodes:
+        #        - name: rancher
+        #          # node 10 exists from focal
+        #          label: ubuntu-focal
     required-projects:
       - opentelekomcloud/kontainer-engine-driver-otc
       - opentelekomcloud/ui-cluster-driver-otc
