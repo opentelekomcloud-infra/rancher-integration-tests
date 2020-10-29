@@ -10,7 +10,7 @@
 
     - name: Construct Driver links
       set_fact:
-        rancher_driver_location: "http://{{ ansible_host }}:8000/{{ rancher_kontainer_engine_tarball }}"
+        rancher_driver_location: "http://{{ ansible_host }}:8000/{{ rancher_kontainer_engine_tarball_base }}"
         rancher_ui_location: "http://{{ ansible_host }}:8000/ui/component.js"
 
     - name: Alter ENV for tox
