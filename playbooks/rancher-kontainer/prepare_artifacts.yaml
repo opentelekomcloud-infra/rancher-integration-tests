@@ -8,11 +8,16 @@
       vars:
         prepare_artifacts_dir: "{{ ansible_user_dir }}/artifacts"
 
-    - name: set_fact
+    - name: Construct Driver links
       set_fact:
         rancher_driver_location: "http://{{ ansible_host }}:8000/{{ rancher_kontainer_engine_tarball }}"
         rancher_ui_location: "http://{{ ansible_host }}:8000/ui/component.js"
+
+    - name: Alter ENV for tox
+      set_fact:
+        tox_environment: "{{ tox_environment | default({}) | combine({'DRIVER_LOCATION': rancher_driver_location, 'DRIVER_UI_LOCATION': rancher_ui_location}) }}"
         cacheable: true
+
 
           #    - name: Prepare Rancher test env
           #      include_role:
