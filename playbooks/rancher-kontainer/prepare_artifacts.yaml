@@ -1,5 +1,12 @@
 ---
 - hosts: all
+  roles:
+    - ensure-python
+    - ensure-go
+    - ensure-goreleaser
+    - ensure-javascript-build-tool
+
+- hosts: all
   tasks:
 
     - name: Prepare Kontainer artifacts
