@@ -1,4 +1,4 @@
-from pyasli.bys import CssSelectorOrBy
+from pyasli.bys import CssSelectorOrBy, by_xpath
 from pyasli.conditions import exist, visible
 from pyasli.elements import Element
 
@@ -56,3 +56,29 @@ class Button(Field):
     def click(self):
         """Click the button"""
         self._base.click()
+
+
+def enabled(element: Element):
+    """Condition for checking if element is not disabled"""
+    return element.enabled
+
+
+def disabled(element: Element):
+    """Condition for checking if element is disabled"""
+    return element.disabled
+
+
+class SearchableSelect(Field):
+    """Container with text input and lines"""
+
+    def __init__(self, base_xpath):
+        super().__init__(by_xpath(base_xpath))
+        self.text_input = TextInput(
+            by_xpath(base_xpath + r'//input[@type="text"]'))
+        self.lines = self._base.elements(
+            by_xpath(base_xpath + r'//div[@class="searchable-option"]'))
+
+    def select(self, text, index):
+        """Select item from list by index after entering some text"""
+        self.text_input.input(text)
+        self.lines[index].click()

@@ -3,7 +3,7 @@ from pyasli import BrowserSession, wait_for
 from pyasli.bys import by_css, by_id, by_xpath
 from pyasli.conditions import have_text, hidden, visible
 
-from integration.tests.fields import Button, Field, TextInput
+from integration.tests.fields import Button, Field, SearchableSelect, TextInput, enabled
 
 
 class Page:
@@ -89,7 +89,7 @@ class LoginPage(Page):
             pass
 
 
-class ClusterListPage(Page):
+class ClusterDriversListPage(Page):
     url = '/n/drivers/cluster'
 
     _add_driver = Button(by_xpath(r"//button[contains(., 'Add Cluster Driver')]"))
@@ -126,3 +126,69 @@ class ClusterListPage(Page):
         """Wait for driver to become 'Active'"""
         status_icon = self._otccce_line.sub_element('span')
         status_icon.should(have_text('Active'), 60)
+
+
+class ClusterListPage(Page):
+    url = '/g/clusters'
+
+    _new_cluster_button = Button(r'.btn[href="/g/clusters/add"]')
+
+    def click_new_cluster(self):
+        self._new_cluster_button.click()
+
+
+class NewClusterSelectPage(Page):
+    url = '/g/clusters/add/select'
+
+    _otc_cce_button = Button(r'div.machine-driver.otccce')
+
+    def click_new_cce_cluster(self):
+        self._otc_cce_button.click()
+
+
+class CCEClusterConfigPage(Page):
+    url = '/g/clusters/add/launch/otccce'
+
+    # general
+    _name = TextInput(r'input[id$="-form-name"]')
+
+    def set_name(self, text):
+        self._name.input(text)
+
+    _save = Button(r'button[type=submit]')
+
+    def next(self):
+        self._save.should_be(enabled)
+        self._save.click()
+
+    _cancel = Button(by_xpath(r'//button[contains(., "Cancel")]'))
+
+    _errors = Field(r'div.banner.bg-error')
+
+    def cancel(self):
+        self._cancel.click()
+
+    # credentials
+    _domain_name = TextInput(r'input.ember-text-field[name=domain-name]')
+    _project_name = TextInput(r'input.ember-text-field[name=project-name]')
+    _username = TextInput(r'input.ember-text-field[name=username]')
+    _password = TextInput(r'input.ember-text-field[name=password]')
+
+    def otc_login(self, domain, username, password, project):
+        self._domain_name.input(domain)
+        self._username.input(username)
+        self._password.input(password)
+        self._project_name.input(project)
+        self.next()
+        self._errors.should_be(hidden)
+
+    # network configuration
+    _vpc_selection = SearchableSelect(r'//div[./label[contains(text(), "Virtual Private Cloud")]]')
+
+    def select_vpc(self, name):
+        self._vpc_selection.select(name, 0)
+
+    _subnet_selection = SearchableSelect(r'//div[./label[contains(text(), "Subnet")]]')
+
+    def select_subnet(self, name):
+        self._subnet_selection.select(name, 0)

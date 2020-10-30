@@ -16,7 +16,10 @@ import pytest
 from pyasli import BrowserSession
 from selenium.webdriver import DesiredCapabilities
 
-from integration.tests.pages import ClusterListPage, LoginPage
+from integration.tests.pages import (
+    CCEClusterConfigPage, ClusterDriversListPage, ClusterListPage, LoginPage,
+    NewClusterSelectPage
+)
 
 
 class RancherConfig:
@@ -99,5 +102,20 @@ def login_page(browser):
 
 
 @pytest.fixture
+def cluster_driver_list(browser):
+    return ClusterDriversListPage(browser)
+
+
+@pytest.fixture
 def cluster_list(browser):
     return ClusterListPage(browser)
+
+
+@pytest.fixture
+def new_cluster_select(browser):
+    return NewClusterSelectPage(browser)
+
+
+@pytest.fixture
+def cluster_config(browser):
+    return CCEClusterConfigPage(browser)
