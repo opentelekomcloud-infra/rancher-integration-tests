@@ -37,10 +37,9 @@ class RancherConfig:
     cce_keypair_name: str
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 def rancher_conf():
     obj = RancherConfig()
-    obj.password = 'abc'
     obj.bind_host = os.environ.get('RANCHER_BIND_HOST')
     if not obj.bind_host:
         try:
@@ -69,7 +68,7 @@ def rancher_conf():
     yield obj
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def browser(rancher_conf, base_url):
     instance = BrowserSession(base_url=base_url)
     with instance:
@@ -77,13 +76,14 @@ def browser(rancher_conf, base_url):
             'chrome',
             remote=True,
             headless=False,
-            command_executor=f'http://{rancher_conf.bind_host}:{rancher_conf.selenium_port}/wd/hub'
-        )
+            command_executor='http://{}:{}/wd/hub'.format(
+                rancher_conf.bind_host, rancher_conf.selenium_port
+            ))
         instance.open('')
         yield instance
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 def base_url(rancher_conf):
     return f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}/'
 

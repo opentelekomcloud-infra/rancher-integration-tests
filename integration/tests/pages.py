@@ -26,9 +26,9 @@ class Page:
 def on_page(wrapped, instance=None, args=None, kwargs=None):
     """Run method only if current page is open"""
     if not isinstance(instance, Page):
-        raise ValueError("`on_page` is only applicable to Page fields")
+        raise ValueError('`on_page` is only applicable to Page fields')
     if instance.browser.url != instance.url:
-        raise AssertionError("Page URL mismatch: expected")
+        raise AssertionError('Page URL mismatch: expected')
     return wrapped(*args, **kwargs)
 
 
@@ -38,7 +38,7 @@ def requires_visible(locator, timeout=10):
     @wrapt.decorator
     def _requires_visible(wrapped, instance=None, args=None, kwargs=None):
         if not isinstance(instance, Page):
-            raise ValueError("`requires_visible` is only applicable to Page fields")
+            raise ValueError('`requires_visible` is only applicable to Page fields')
         instance.browser.element(locator).assure(visible, timeout)
         return wrapped(*args, **kwargs)
 
@@ -51,7 +51,7 @@ def requires_hidden(locator, timeout=10):
     @wrapt.decorator
     def _requires_hidden(wrapped, instance=None, args=None, kwargs=None):
         if not isinstance(instance, Page):
-            raise ValueError("`requires_hidden` is only applicable to Page fields")
+            raise ValueError('`requires_hidden` is only applicable to Page fields')
         instance.browser.element(locator).assure(hidden, timeout)
         return wrapped(*args, **kwargs)
 
@@ -59,7 +59,7 @@ def requires_hidden(locator, timeout=10):
 
 
 class LoginPage(Page):
-    url = "/login"
+    url = '/login'
 
     _username = TextInput(by_id('login-username-local'))
     _password = TextInput(by_id('login-password-local'))
@@ -81,7 +81,7 @@ class LoginPage(Page):
 
 
 class ClusterListPage(Page):
-    url = "/n/drivers/cluster"
+    url = '/n/drivers/cluster'
 
     _add_driver = Button(by_xpath(r"//button[contains(., 'Add Cluster Driver')]"))
 
@@ -97,8 +97,8 @@ class ClusterListPage(Page):
     _domain = TextInput(by_xpath(r"//div[contains(., 'Whitelist Domains')]//input"))
     _create = Button(by_xpath(r"//button[contains(., 'Create')]"))
 
-    @requires_visible(by_css("form.modal-container.large-modal"))
-    def register_driver(self, url, ui_url, allowed_domain=""):
+    @requires_visible(by_css('form.modal-container.large-modal'))
+    def register_driver(self, url, ui_url, allowed_domain=''):
         """Register new cluster driver"""
         self._download_url.input(url)
         self._custom_ui_url.input(ui_url)
@@ -110,12 +110,12 @@ class ClusterListPage(Page):
     # table
     _otccce_line = Field(by_xpath(r"//tr[contains(.,'kontainer-engine-driver-otccce')]"))
 
-    @requires_hidden(by_css("form.modal-container.large-modal"))
+    @requires_hidden(by_css('form.modal-container.large-modal'))
     def wait_for_activation(self):
         """Wait for driver to become 'Active'"""
-        span = by_css("span.badge-state")
-        wait_for(self._otccce_line, _have_subelement_with_text(span, "Activating"), 60)
-        wait_for(self._otccce_line, _have_subelement_with_text(span, "Active"), 60)
+        span = by_css('span.badge-state')
+        wait_for(self._otccce_line, _have_subelement_with_text(span, 'Activating'), 60)
+        wait_for(self._otccce_line, _have_subelement_with_text(span, 'Active'), 60)
 
 
 def _have_subelement_with_text(locator, text) -> ElementCondition:

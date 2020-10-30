@@ -10,19 +10,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-DRIVERS_URL = "/n/drivers/cluster"
+DRIVERS_URL = '/n/drivers/cluster'
 
 
 def test_addclusterdriver(rancher_conf, login_page, cluster_list):
     # login as admin
-    login_page.login(DRIVERS_URL, "admin", rancher_conf.rancher_password)
+    login_page.login(DRIVERS_URL, 'admin', rancher_conf.rancher_password)
     # click "Add Cluster Driver"
     cluster_list.click_add_cluster_driver()
     # fill new cluster driver fields and click "Create""
     cluster_list.register_driver(
         rancher_conf.kontainer_driver_location,
         rancher_conf.kontainer_driver_ui_location,
-        "*.otc.t-systems.com"
+        '*.otc.t-systems.com'
     )
     # wait until otccce driver state is "Active"
     cluster_list.wait_for_activation()
