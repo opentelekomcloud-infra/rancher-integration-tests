@@ -13,7 +13,7 @@
 DRIVERS_URL = '/n/drivers/cluster'
 
 
-def test_addclusterdriver(rancher_conf, login_page, cluster_list):
+def test_add_cluster_driver(rancher_conf, login_page, cluster_list):
     # login as admin
     login_page.login(DRIVERS_URL, 'admin', rancher_conf.rancher_password)
     # click "Add Cluster Driver"

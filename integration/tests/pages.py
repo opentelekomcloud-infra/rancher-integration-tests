@@ -2,7 +2,6 @@ import wrapt
 from pyasli import BrowserSession, wait_for
 from pyasli.bys import by_css, by_id, by_xpath
 from pyasli.conditions import have_text, hidden, visible
-from pyasli.elements.elements import Element, ElementCondition
 
 from integration.tests.fields import Button, Field, TextInput
 
@@ -28,7 +27,8 @@ def on_page(wrapped, instance=None, args=None, kwargs=None):
     if not isinstance(instance, Page):
         raise ValueError('`on_page` is only applicable to Page fields')
     if instance.browser.url != instance.url:
-        raise AssertionError('Page URL mismatch: expected')
+        raise AssertionError(f'Page URL mismatch. Expected {instance.url},'
+                             f'got {instance.browser.url}')
     return wrapped(*args, **kwargs)
 
 
@@ -45,17 +45,17 @@ def requires_visible(locator, timeout=10):
     return _requires_visible
 
 
-def requires_hidden(locator, timeout=10):
+def requires_not_existing(locator, timeout=10):
     """Run method only after required element becomes visible"""
 
     @wrapt.decorator
-    def _requires_hidden(wrapped, instance=None, args=None, kwargs=None):
+    def _not_existing(wrapped, instance=None, args=None, kwargs=None):
         if not isinstance(instance, Page):
-            raise ValueError('`requires_hidden` is only applicable to Page fields')
-        instance.browser.element(locator).assure(hidden, timeout)
+            raise ValueError('`not_existing` is only applicable to Page fields')
+        instance.browser.element(locator).assure(lambda e: not e.exists, timeout)
         return wrapped(*args, **kwargs)
 
-    return _requires_hidden
+    return _not_existing
 
 
 class LoginPage(Page):
@@ -65,7 +65,8 @@ class LoginPage(Page):
     _password = TextInput(by_id('login-password-local'))
     _sign_in = Button(by_css('button.bg-primary'))
 
-    @on_page
+    _modal_ok = Button(by_css('div.footer-actions .btn'))
+
     def login(self, next_url, username, password):
         """Login user and open URL
 
@@ -75,9 +76,17 @@ class LoginPage(Page):
         """
         self.browser.open(next_url)
         self._username.input(username)
-        self._password.text = password
+        self._password.input(password)
         self._sign_in.click()
         wait_for(self.browser, lambda b: b.url == next_url, timeout=10)
+
+        # there can be optional information popup
+        try:
+            self._modal_ok.assure(visible, 1)
+            self._modal_ok.click()
+            self._modal_ok.assure(hidden)
+        except TimeoutError:
+            pass
 
 
 class ClusterListPage(Page):
@@ -94,10 +103,12 @@ class ClusterListPage(Page):
     _download_url = TextInput(by_xpath(r"//div[contains(., 'Download URL')]/input"))
     _custom_ui_url = TextInput(by_xpath(r"//div[contains(., 'Custom UI URL')]/input"))
     _add_domain = Button(by_xpath(r"//span[contains(., 'Add Domain')]"))
-    _domain = TextInput(by_xpath(r"//div[contains(., 'Whitelist Domains')]//input"))
+    _domain = TextInput(by_xpath(r"//span[@data-title='Whitelist Domains']/input"))
     _create = Button(by_xpath(r"//button[contains(., 'Create')]"))
 
-    @requires_visible(by_css('form.modal-container.large-modal'))
+    __modal_locator = by_css('form.modal-container.large-modal')
+
+    @requires_visible(__modal_locator)
     def register_driver(self, url, ui_url, allowed_domain=''):
         """Register new cluster driver"""
         self._download_url.input(url)
@@ -110,16 +121,8 @@ class ClusterListPage(Page):
     # table
     _otccce_line = Field(by_xpath(r"//tr[contains(.,'kontainer-engine-driver-otccce')]"))
 
-    @requires_hidden(by_css('form.modal-container.large-modal'))
+    @requires_not_existing(__modal_locator)
     def wait_for_activation(self):
         """Wait for driver to become 'Active'"""
-        span = by_css('span.badge-state')
-        wait_for(self._otccce_line, _have_subelement_with_text(span, 'Activating'), 60)
-        wait_for(self._otccce_line, _have_subelement_with_text(span, 'Active'), 60)
-
-
-def _have_subelement_with_text(locator, text) -> ElementCondition:
-    def _condition(elem: Element):
-        return elem.element(locator).should(have_text(text))
-
-    return _condition
+        status_icon = self._otccce_line.sub_element('span')
+        status_icon.should(have_text('Active'), 60)

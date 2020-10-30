@@ -14,6 +14,7 @@ import socket
 
 import pytest
 from pyasli import BrowserSession
+from selenium.webdriver import DesiredCapabilities
 
 from integration.tests.pages import ClusterListPage, LoginPage
 
@@ -71,6 +72,8 @@ def rancher_conf():
 @pytest.fixture(scope='module')
 def browser(rancher_conf, base_url):
     instance = BrowserSession(base_url=base_url)
+    capability = DesiredCapabilities.CHROME.copy()
+    capability['acceptInsecureCerts'] = True
     with instance:
         instance.setup_browser(
             'chrome',
@@ -78,14 +81,16 @@ def browser(rancher_conf, base_url):
             headless=False,
             command_executor='http://{}:{}/wd/hub'.format(
                 rancher_conf.bind_host, rancher_conf.selenium_port
-            ))
+            ),
+            desired_capabilities=capability,
+        )
         instance.open('')
         yield instance
 
 
 @pytest.fixture(scope='session')
 def base_url(rancher_conf):
-    return f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}/'
+    return f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}'
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 from pyasli.bys import CssSelectorOrBy
-from pyasli.conditions import visible
+from pyasli.conditions import exist, visible
 from pyasli.elements import Element
 
 
@@ -17,6 +17,10 @@ class Field:
         if (self._base is None) or (self._base.browser != browser):
             self._base = browser.element(self._locator)
         return self._base
+
+    def sub_element(self, locator):
+        """Find subelement if the field"""
+        return self._base.element(locator)
 
     def assure(self, condition, timeout=5):
         """Assure wrapped element state
@@ -40,8 +44,10 @@ class TextInput(Field):
 
     def input(self, text):
         """Replace current field value with given"""
+        self._base.assure(exist)
         self._base.assure(visible)
-        self._base.text = str(text)
+        self._base.click()
+        self._base.text = text
 
 
 class Button(Field):
