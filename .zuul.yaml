@@ -102,6 +102,7 @@
     secrets:
       - name: rancher_creds
         secret: rancher-func-creds
+        pass-to-parent: true
     vars:
       tox_envlist: integration
 
@@ -113,6 +114,7 @@
     secrets:
       - name: rancher_creds
         secret: rancher-func-creds
+        pass-to-parent: true
     vars:
       tox_envlist: integration
 
