@@ -1,3 +1,5 @@
 pytest
 selenium
 flake8
+wrapt>=1.12,<1.13
+pyasli>=0.2.4,<0.3

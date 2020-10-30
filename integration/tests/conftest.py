@@ -11,17 +11,33 @@
 # under the License.
 import os
 import socket
-import pytest
 
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import pytest
+from pyasli import BrowserSession
+
+from integration.tests.pages import ClusterListPage, LoginPage
 
 
 class RancherConfig:
-    pass
+    bind_host: str
+    password: str
+    rancher_port: str
+    selenium_port: str
+    rancher_password: str
+    kontainer_driver_location: str
+    kontainer_driver_ui_location: str
+    whitelist: str
+    cluster_name: str
+    cce_domain_name: str
+    cce_project_name: str
+    cce_user_name: str
+    cce_password: str
+    vpc_name: str
+    subnet_name: str
+    cce_keypair_name: str
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def rancher_conf():
     obj = RancherConfig()
     obj.password = 'abc'
@@ -53,14 +69,30 @@ def rancher_conf():
     yield obj
 
 
+@pytest.fixture(scope="module")
+def browser(rancher_conf, base_url):
+    instance = BrowserSession(base_url=base_url)
+    with instance:
+        instance.setup_browser(
+            'chrome',
+            remote=True,
+            headless=False,
+            command_executor=f'http://{rancher_conf.bind_host}:{rancher_conf.selenium_port}/wd/hub'
+        )
+        instance.open('')
+        yield instance
+
+
+@pytest.fixture(scope="session")
+def base_url(rancher_conf):
+    return f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}/'
+
+
 @pytest.fixture
-def selenium_driver(rancher_conf):
-    capability = DesiredCapabilities.CHROME
-    capability['acceptInsecureCerts'] = True
-    driver = webdriver.Remote(
-        command_executor='http://%s:%s/wd/hub' % (
-            rancher_conf.bind_host, rancher_conf.selenium_port),
-        desired_capabilities=capability)
-    driver.implicitly_wait(30)
-    yield driver
-    driver.quit()
+def login_page(browser):
+    return LoginPage(browser)
+
+
+@pytest.fixture
+def cluster_list(browser):
+    return ClusterListPage(browser)
