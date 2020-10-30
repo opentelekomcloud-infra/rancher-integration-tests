@@ -16,8 +16,8 @@
     protocol: tcp
     destination_port: "{{ zj_port }}"
   loop:
-    - 8000
     - 8003
+    - 8080
   loop_control:
     loop_var: zj_port
   tags:
