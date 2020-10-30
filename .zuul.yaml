@@ -7,10 +7,12 @@
       Prepare Rancher/Selenium
     pre-run: playbooks/rancher-kontainer/pre.yaml
     abstract: true
+    nodeset: ubuntu-focal
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
       python_version: 3.8
+      bindep_profile: test py38
 
 - job:
     name: rancher-integration-devel

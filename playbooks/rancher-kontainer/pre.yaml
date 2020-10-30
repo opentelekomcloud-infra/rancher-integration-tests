@@ -11,7 +11,6 @@
 - hosts: all
   roles:
     - ensure-python
-      # - ensure-pip
     - ensure-docker
     - ensure-go
     - ensure-goreleaser
