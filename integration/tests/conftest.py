@@ -49,7 +49,7 @@ def rancher_conf():
     obj.cce_password = os.environ.get('RANCHER_CCE_PASSWORD')
     obj.vpc_name = os.environ.get('RANCHER_CCE_VPC_NAME')
     obj.subnet_name = os.environ.get('RANCHER_CCE_SUBNET_NAME')
-    obj.cce_keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
+    obj.keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
     yield obj
 
 
