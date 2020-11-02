@@ -16,8 +16,10 @@ import pytest
 from pyasli import BrowserSession
 from selenium.webdriver import DesiredCapabilities
 
-from integration.tests.pages import (
-    CCEClusterConfigPage, ClusterDriversListPage, ClusterListPage, LoginPage,
+from integration.tests.helpers.api_client import APIClient
+from integration.tests.helpers.pages import (
+    CCEClusterConfigPage, ClusterDashboardPage,
+    ClusterDriversListPage, ClusterListPage, LoginPage,
     NewClusterSelectPage
 )
 
@@ -72,7 +74,7 @@ def rancher_conf():
     yield obj
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def browser(rancher_conf, base_url):
     instance = BrowserSession(base_url=base_url)
     capability = DesiredCapabilities.CHROME.copy()
@@ -97,11 +99,6 @@ def base_url(rancher_conf):
 
 
 @pytest.fixture
-def login_page(browser):
-    return LoginPage(browser)
-
-
-@pytest.fixture
 def cluster_driver_list(browser):
     return ClusterDriversListPage(browser)
 
@@ -119,3 +116,43 @@ def new_cluster_select(browser):
 @pytest.fixture
 def cluster_config(browser):
     return CCEClusterConfigPage(browser)
+
+
+@pytest.fixture
+def cluster_details(browser):
+    return ClusterDashboardPage(browser)
+
+
+@pytest.fixture(scope='session')
+def signed_in(browser, rancher_conf):
+    login_page = LoginPage(browser)
+    # login as admin
+    login_page.login('', 'admin', rancher_conf.rancher_password)
+    return browser
+
+
+@pytest.fixture(scope='session')
+def api_client(signed_in):
+    """HTTP client
+
+    Cookies inherited from browser session
+    """
+    return APIClient.from_browser_session(signed_in)
+
+
+@pytest.fixture(scope='session')
+def cleanup_cluster_driver(api_client):
+    yield
+    api_client.delete_cce_driver()
+
+
+@pytest.fixture(scope='session')
+def assure_cluster_driver(api_client, rancher_conf):
+    """Create cluster driver if it is missing"""
+    existing = api_client.find_cce_driver()
+    if existing is not None:
+        return
+    api_client.create_cluster_driver(
+        rancher_conf.kontainer_driver_location,
+        rancher_conf.kontainer_driver_ui_location,
+    )

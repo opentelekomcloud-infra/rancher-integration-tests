@@ -1,35 +1,11 @@
 import wrapt
-from pyasli import BrowserSession, wait_for
 from pyasli.bys import by_css, by_id, by_xpath
-from pyasli.conditions import have_text, hidden, visible
+from pyasli.conditions import hidden, visible
 
-from integration.tests.fields import Button, Field, SearchableSelect, TextInput, enabled
-
-
-class Page:
-    """Base page class bind to """
-
-    url = NotImplemented
-
-    def __init__(self, browser: BrowserSession):
-        self.browser = browser
-
-    def __getattribute__(self, item):
-        value = super().__getattribute__(item)
-        if isinstance(value, Field):
-            value.__refresh__(self.browser)
-        return value
-
-
-@wrapt.decorator
-def on_page(wrapped, instance=None, args=None, kwargs=None):
-    """Run method only if current page is open"""
-    if not isinstance(instance, Page):
-        raise ValueError('`on_page` is only applicable to Page fields')
-    if instance.browser.url != instance.url:
-        raise AssertionError(f'Page URL mismatch. Expected {instance.url},'
-                             f'got {instance.browser.url}')
-    return wrapped(*args, **kwargs)
+from integration.tests.helpers.base import Field, Page, on_page
+from integration.tests.helpers.fields import (
+    Button, ClusterDriverRow, ClusterRow, SearchSelect, TextInput, enabled
+)
 
 
 def requires_visible(locator, timeout=10):
@@ -78,15 +54,22 @@ class LoginPage(Page):
         self._username.input(username)
         self._password.input(password)
         self._sign_in.click()
-        wait_for(self.browser, lambda b: b.url == next_url, timeout=10)
 
         # there can be optional information popup
+        self._close_optional_modal()
+
+    def __modal_shown(self):
         try:
             self._modal_ok.assure(visible, 1)
-            self._modal_ok.click()
-            self._modal_ok.assure(hidden)
+            return True
         except TimeoutError:
-            pass
+            return False
+
+    def _close_optional_modal(self):
+        if not self.__modal_shown():
+            return
+        self._modal_ok.click()
+        self._modal_ok.assure(hidden)
 
 
 class ClusterDriversListPage(Page):
@@ -119,13 +102,11 @@ class ClusterDriversListPage(Page):
         self._create.click()
 
     # table
-    _otccce_line = Field(by_xpath(r"//tr[contains(.,'kontainer-engine-driver-otccce')]"))
-
-    @requires_not_existing(__modal_locator)
-    def wait_for_activation(self):
-        """Wait for driver to become 'Active'"""
-        status_icon = self._otccce_line.sub_element('span')
-        status_icon.should(have_text('Active'), 60)
+    @property
+    def driver_row(self):
+        row = ClusterDriverRow('kontainer-engine-driver-otccce')
+        row.__refresh__(self.browser)
+        return row
 
 
 class ClusterListPage(Page):
@@ -135,6 +116,12 @@ class ClusterListPage(Page):
 
     def click_new_cluster(self):
         self._new_cluster_button.click()
+
+    def cluster_row(self, name):
+        row = ClusterRow(name)
+        # refresh row, as it's not processed in usual workflow
+        row.__refresh__(self.browser)
+        return row
 
 
 class NewClusterSelectPage(Page):
@@ -172,23 +159,38 @@ class CCEClusterConfigPage(Page):
     _domain_name = TextInput(r'input.ember-text-field[name=domain-name]')
     _project_name = TextInput(r'input.ember-text-field[name=project-name]')
     _username = TextInput(r'input.ember-text-field[name=username]')
-    _password = TextInput(r'input.ember-text-field[name=password]')
+    _password = TextInput(r'input.ember-text-field[name=passsword]')
 
-    def otc_login(self, domain, username, password, project):
+    def input_credentials(self, domain, username, password, project):
         self._domain_name.input(domain)
         self._username.input(username)
         self._password.input(password)
         self._project_name.input(project)
-        self.next()
-        self._errors.should_be(hidden)
 
     # network configuration
-    _vpc_selection = SearchableSelect(r'//div[./label[contains(text(), "Virtual Private Cloud")]]')
+    _vpcs = SearchSelect(r'//div[./label[contains(text(), "Virtual Private Cloud")]]')
 
     def select_vpc(self, name):
-        self._vpc_selection.select(name, 0)
+        self._vpcs.select(name, 0)
 
-    _subnet_selection = SearchableSelect(r'//div[./label[contains(text(), "Subnet")]]')
+    _subnet_selection = SearchSelect(r'//div[./label[contains(text(), "Subnet")]]')
 
     def select_subnet(self, name):
-        self._subnet_selection.select(name, 0)
+        self._subnet_selection.select(name)
+
+    # node configuration
+    _ssh_keys = SearchSelect(r'//div[./label[contains(text(), "SSH Key Pair")]]')
+
+    def select_key_pair(self, name):
+        self._ssh_keys.select(name)
+
+
+class ClusterDashboardPage(Page):
+    _more_actions = Button('div.more-actions')
+    _delete_button = Button(r'//span[contains(text(), "Delete")]')
+    _delete_confirm_button = Button('div.footer-actions .bg-error')
+
+    def delete(self):
+        self._more_actions.click()
+        self._delete_button.click()
+        self._delete_confirm_button.click()

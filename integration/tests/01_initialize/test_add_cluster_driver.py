@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-def test_add_cluster_driver(rancher_conf, login_page, cluster_driver_list):
-    # login as admin
-    login_page.login(cluster_driver_list.url, 'admin', rancher_conf.rancher_password)
+def test_add_cluster_driver(rancher_conf, cluster_driver_list,
+                            api_client, cleanup_cluster_driver):
+    cluster_driver_list.open()
 
     # click "Add Cluster Driver"
     cluster_driver_list.click_add_cluster_driver()
@@ -24,5 +24,6 @@ def test_add_cluster_driver(rancher_conf, login_page, cluster_driver_list):
         '*.otc.t-systems.com'
     )
 
-    # wait until otccce driver state is "Active"
-    cluster_driver_list.wait_for_activation()
+    # wait until CCE driver state is "Active"
+    cluster_driver_list.driver_row.state.assure('Activating')
+    cluster_driver_list.driver_row.state.assure('Active')

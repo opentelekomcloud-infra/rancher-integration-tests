@@ -10,16 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
+from integration.tests.helpers.fields import missing
 
 
-def test_create_cce_cluster(self, rancher_conf, login_page, cluster_list,
-                            new_cluster_select, cluster_config):
-    # login as admin
-    login_page.login(cluster_list.url, 'admin', rancher_conf.rancher_password)
+def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
+                               assure_cluster_driver, new_cluster_select,
+                               cluster_config, cluster_details):
+    cluster_list.open()
 
     # open creation page
     cluster_list.click_new_cluster()
@@ -29,140 +26,53 @@ def test_create_cce_cluster(self, rancher_conf, login_page, cluster_list,
 
     # setup new cluster
 
+    cluster_config.set_name(rancher_conf.cluster_name)
+
     # login in OTC
-    cluster_config.otc_login(
+    cluster_config.input_credentials(
         rancher_conf.cce_domain_name,
         rancher_conf.cce_user_name,
         rancher_conf.cce_password,
         rancher_conf.cce_project_name,
     )
 
-    # use default cluster configuration
+    # next: Cluster Configuration
     cluster_config.next()
+    # use default cluster configuration
 
+    # next: network configuration
+    cluster_config.next()
     # select required VPC
     cluster_config.select_vpc(rancher_conf.vpc_name)
     # select required Subnet
     cluster_config.select_subnet(rancher_conf.subnet_name)
 
+    # next: Cluster Floating IP
     cluster_config.next()
 
-    # 25 | click |
-    #  xpath=//button[contains(.,'Next: Cluster Floating IP')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//button[contains(.,\'Next: Cluster Floating IP\')]")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 26 | runScript | window.scrollTo(0,655.2000122070312) |
-    browser.execute_script(
-        "window.scrollTo(0,655.2000122070312)")
-    # 27 | click |
-    #  xpath=//button[contains(.,'Next: Node Configuration')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//button[contains(.,\'Next: Node Configuration\')]")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 28 | click |
-    #  xpath=//div[contains(.,'SSH Key Pair')]/span/div/div/input |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//div[contains(.,\'SSH Key Pair\')]"
-        "/span/div/div/input")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 29 | click | xpath=//div[contains(.,'SSH Key Pair')]
-    #  /span/div/div/section/div
-    #  [contains(.,'rancher_cce_keypair_name')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//div[contains(.,\'SSH Key Pair\')]"
-        "/span/div/div/section/div[contains(.,\'%s\')]" %
-        rancher_conf.keypair_name)
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 30 | click |
-    #  xpath=//button[contains(.,'Next: Nodes disk configuration')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//button[contains(.,\'Next: Nodes disk configuration\')]")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 31 | runScript | window.scrollTo(0,1094.4000244140625) |
-    browser.execute_script(
-        "window.scrollTo(0,1094.4000244140625)")
-    # 35 | click |
-    #  xpath=//button[contains(.,'Finish & Create Cluster')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//button[contains(.,\'Finish & Create Cluster\')]")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 36 | assertText | linkText={{ rancher_cce_cluster_name }} |
-    assert browser.find_element(
-        By.LINK_TEXT, rancher_conf.cluster_name).text == \
-           rancher_conf.cluster_name
-    # 37 | assertText | xpath=//tr
-    #  [contains(.,'rancher_cce_cluster_name')]
-    #  /td/span[contains(.,'Provisioning')] | Provisioning
-    assert browser.find_element(
-        By.XPATH,
-        "//tr[contains(.,\'%s\')]/td/span"
-        "[contains(.,\'Provisioning\')]" %
-        rancher_conf.cluster_name).text \
-           == "Provisioning"
-    # 38 | waitForElementPresent |
-    #  xpath=//tr[contains(.,'rancher_cce_cluster_name')]
-    #  /td/span[contains(.,'Active')] | 900
-    WebDriverWait(
-        browser, 900
-    ).until(expected_conditions.presence_of_element_located(
-        (By.XPATH,
-         "//tr[contains(.,\'%s\')]/td/span[contains(.,\'Active\')]" %
-         rancher_conf.cluster_name)))
-    # 39 | assertText | xpath=//tr
-    #  [contains(.,'rancher_cce_cluster_name')]
-    #  /td/span[contains(.,'Active')] | Active
-    assert browser.find_element(
-        By.XPATH,
-        "//tr[contains(.,\'%s\')]/td/span"
-        "[contains(.,\'Active\')]" %
-        rancher_conf.cluster_name).text \
-           == "Active"
-    # 40 | click | xpath=//tr
-    #  [contains(.,'rancher_cce_cluster_name')]/td/input |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//tr[contains(.,\'%s\')]/td/input" %
-        rancher_conf.cluster_name)
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 41 | click | linkText=Delete |
-    self.element = browser.find_element(
-        By.LINK_TEXT, "Delete")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 42 | click | xpath=//button[contains(.,'Delete')] |
-    self.element = browser.find_element(
-        By.XPATH,
-        "//button[contains(.,\'Delete\')]")
-    ActionChains(browser).move_to_element(
-        self.element).click().perform()
-    # 43 | waitForElementPresent |
-    #  xpath=//tr[contains(.,'rancher_cce_cluster_name')]
-    #  /td/span[contains(.,'Removing')] | 30
-    WebDriverWait(
-        browser, 30
-    ).until(expected_conditions.presence_of_element_located(
-        (By.XPATH,
-         "//tr[contains(.,\'%s\')]/td/span"
-         "[contains(.,\'Removing\')]" %
-         rancher_conf.cluster_name)))
-    # 44 | waitForElementNotPresent |
-    #  linkText=rancher_cce_cluster_name | 450
-    WebDriverWait(
-        browser, 450
-    ).until(expected_conditions.invisibility_of_element_located(
-        (By.LINK_TEXT,
-         rancher_conf.cluster_name)))
+    # next: Node Configuration
+    cluster_config.next()
+    cluster_config.select_key_pair(rancher_conf.keypair_name)
+
+    # next: Nodes disk configuration
+    cluster_config.next()
+    # use default configuration
+    # finish creation
+    cluster_config.next()
+
+    # =====
+    # find cluster row in list
+    my_cluster = cluster_list.cluster_row(rancher_conf.cluster_name)
+    my_cluster.state.assure('Provisioning', 30)
+    my_cluster.state.assure('Active', 900)
+    # go to cluster dashboard
+    my_cluster.to_details()
+
+    # remove cluster
+    cluster_details.delete()
+
+    # wait for cluster to start deleting
+    my_cluster.state.assure('Removing', 300)
+
+    # wait for cluster to end deleting
+    my_cluster.assure(missing, 450)
