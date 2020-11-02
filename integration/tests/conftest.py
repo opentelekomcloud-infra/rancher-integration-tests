@@ -40,7 +40,7 @@ class RancherConfig:
     cce_password: str
     vpc_name: str
     subnet_name: str
-    cce_keypair_name: str
+    keypair_name: str
 
 
 @pytest.fixture(scope='session')
