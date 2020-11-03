@@ -156,3 +156,9 @@ def assure_cluster_driver(api_client, rancher_conf):
         rancher_conf.kontainer_driver_location,
         rancher_conf.kontainer_driver_ui_location,
     )
+
+
+@pytest.fixture()
+def cleanup_cluster(api_client, rancher_conf):
+    yield
+    api_client.delete_cluster(rancher_conf.cluster_name)

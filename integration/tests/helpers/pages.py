@@ -1,10 +1,11 @@
 import wrapt
+from pyasli import wait_for
 from pyasli.bys import by_css, by_id, by_xpath
-from pyasli.conditions import hidden, visible
+from pyasli.conditions import enabled, hidden, visible
 
 from integration.tests.helpers.base import Field, Page, on_page
 from integration.tests.helpers.fields import (
-    Button, ClusterDriverRow, ClusterRow, SearchSelect, TextInput, enabled
+    Button, ClusterDriverRow, ClusterRow, SearchSelect, TextInput
 )
 
 
@@ -60,7 +61,7 @@ class LoginPage(Page):
 
     def __modal_shown(self):
         try:
-            self._modal_ok.assure(visible, 1)
+            wait_for(self._modal_ok, visible, 1)
             return True
         except TimeoutError:
             return False

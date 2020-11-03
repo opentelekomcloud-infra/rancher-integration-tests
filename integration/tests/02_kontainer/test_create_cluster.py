@@ -9,13 +9,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
-from integration.tests.helpers.fields import missing
+from pyasli.conditions import missing
 
 
 def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
                                assure_cluster_driver, new_cluster_select,
-                               cluster_config, cluster_details):
+                               cluster_config, cluster_details, cleanup_cluster):
     cluster_list.open()
 
     # open creation page

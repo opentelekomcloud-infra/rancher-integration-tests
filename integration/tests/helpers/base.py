@@ -6,16 +6,18 @@ from pyasli.elements import Element
 
 
 class Field:
-    """Class for describing fields in class.
+    """Class for describing fields in class
 
     Wraps :class:`Element`
+
+    Fields can have other fields inside
     """
 
     _locator: CssSelectorOrBy
     _base: Element = None
-    parent: 'Field' = None
 
     def __get__(self, instance, owner):
+        """Work as descriptor"""
         if isinstance(instance, Field):
             searcher = instance._base
         elif isinstance(instance, Page):
@@ -25,20 +27,22 @@ class Field:
         self.__refresh__(searcher)
         return self
 
-    def __init__(self, locator: CssSelectorOrBy, parent: 'Field' = None):
+    def __getattribute__(self, item):
+        """Handle child fields with care"""
+        val = super().__getattribute__(item)
+        if isinstance(val, Field):
+            val.__refresh__(self._base)
+        return val
+
+    def __init__(self, locator: CssSelectorOrBy):
         self._locator = locator
-        self.parent = parent
 
     def _move_to(self):
         self._base.assure(exist)
         return self._base.get_actual().location_once_scrolled_into_view
 
-    def __refresh__(self, searcher=None):
+    def __refresh__(self, searcher):
         """Method to update element reference if it is already dead"""
-        if self.parent is not None:  # use parent as searcher if it exists
-            searcher = self.parent._base
-        if searcher is None:
-            raise ValueError('No parent or browser provided')
         if self._base is None:
             self._base = searcher.element(self._locator)
         return self._base

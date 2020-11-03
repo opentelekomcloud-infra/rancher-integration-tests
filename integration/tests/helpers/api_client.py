@@ -41,6 +41,7 @@ class APIClient:
         return instance
 
     _cluster_driver_list_url = '/v3/kontainerDrivers'
+    _cluster_list_url = '/v3/clusters'
     _cluster_driver_url = '/v3/kontainerDrivers/{id}'
 
     def create_cluster_driver(self, url, ui_url):
@@ -64,9 +65,9 @@ class APIClient:
         resp = self.session.get(self._cluster_driver_list_url,
                                 params={'name': CCE_DRIVER_NAME})
         drivers = resp.json()['data']
-        if drivers:
-            return drivers[0]
-        return None
+        if not drivers:
+            return None
+        return drivers[0]
 
     def delete_cce_driver(self):
         driver = self.find_cce_driver()
@@ -83,3 +84,19 @@ class APIClient:
             if resp.status_code == 404:
                 return
         raise TimeoutError(f'Failed get 404 on "{url}"')
+
+    def find_cluster(self, name):
+        resp = self.session.get(self._cluster_list_url,
+                                params={'driver': CCE_DRIVER_NAME, 'name': name})
+        clusters = resp.json()['data']
+        if not clusters:
+            return None
+        return clusters[0]
+
+    def delete_cluster(self, name):
+        cluster = self.find_cluster(name)
+        if cluster is None:
+            return
+        resp = self.session.delete(cluster['links']['remove'])
+        assert resp.status_code == 200
+        self.wait_for_404(cluster['links']['self'], timeout=5 * 60)

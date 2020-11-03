@@ -1,6 +1,8 @@
+import random
+
 from pyasli.bys import by_xpath
-from pyasli.conditions import exist, text_is
-from pyasli.elements import Element
+from pyasli.conditions import clickable, exist, text_is
+from selenium.common.exceptions import WebDriverException
 
 from integration.tests.helpers.base import Field
 
@@ -35,30 +37,6 @@ class Button(Field):
         self._base.click()
 
 
-def enabled(element: Element):
-    """Condition to check if element is not disabled"""
-    return element.enabled
-
-
-def disabled(element: Element):
-    """Condition to check if element is disabled"""
-    return element.disabled
-
-
-def missing(element: Element):
-    """Condition to check if element is missing from DOM
-
-    Antonym to `exists`
-    """
-    return not element.exists
-
-
-def clickable(element: Element) -> bool:
-    """Check if element available for interaction"""
-    act = element.get_actual()
-    return act.is_displayed() and act.is_enabled()
-
-
 class SearchSelect(Field):
     """Container with text input and lines"""
 
@@ -69,19 +47,25 @@ class SearchSelect(Field):
         """
         super().__init__(by_xpath(xpath))
         self._base_xpath = xpath
-        self.text_input = TextInput(by_xpath(xpath + r'//input[@type="text"]'), self)
+        self._text_input = TextInput(by_xpath(xpath + r'//input[@type="text"]'))
 
     @property
     def lines(self):
-        return self._base.elements(
-            by_xpath(self._base_xpath + r'//div[@class="searchable-option"]')
-        )
+        return self._base.browser.elements(
+            by_xpath(self._base_xpath + r'//div[@class="searchable-option"]'))
 
     def select(self, text, index=0):
         """Select item from list by index after entering some text"""
-        self.text_input.__refresh__(self)
-        self.text_input.input(text)
-        self.lines[index].click()
+
+        try:
+            self._text_input.input(text)
+            self.lines[index].click()
+        except WebDriverException as wde:
+            screenshot = self._base.browser.get_actual().get_screenshot_as_png()
+            png_path = f'logs/select-fail-{random.randrange(0xffffff):06x}.png'
+            with open(png_path, 'wb+') as png:
+                png.write(screenshot)
+            raise Exception(f'Failed to select item.\nScreenshot: {png_path}') from wde
 
 
 class _StateField(Field):
@@ -104,7 +88,7 @@ class ClusterRow(Field):
 
     def to_details(self):
         child_xpath = r'/td[contains(@data-title, "Cluster Name")]/a'
-        edit_lint = self.sub_element(self._base_xpath + child_xpath)
+        edit_lint = self._base.browser.elements(by_xpath(self._base_xpath + child_xpath))
         edit_lint.click()
 
 
