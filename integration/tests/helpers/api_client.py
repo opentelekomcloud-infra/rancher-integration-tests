@@ -57,7 +57,7 @@ class APIClient:
             'whitelistDomains': ['*.otc.t-systems.com']
         }
         resp = self.session.post(self._cluster_driver_list_url, json=data)
-        assert resp.status_code == 201
+        assert resp.status_code in [200, 201], f'{resp.status_code} not in [200, 201]'
         return resp.json()
 
     def find_cce_driver(self):

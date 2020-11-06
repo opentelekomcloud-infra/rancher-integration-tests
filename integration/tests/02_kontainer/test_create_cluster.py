@@ -68,7 +68,7 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
     my_cluster.state.assure('Provisioning', 30)
     my_cluster.state.assure('Active', 900)
     # remove cluster
-    my_cluster.click_delete()
+    cluster_list.delete(rancher_conf.cluster_name)
 
     # wait for cluster to start deleting
     my_cluster.state.assure('Removing', 300)

@@ -162,13 +162,13 @@ class CCEClusterConfigPage(Page):
     def select_vpc(self, name):
         self._vpcs.select(name, 0)
 
-    _subnets = search_select(by_xpath(r'./label[contains(text(), "Subnet")]/..'))
+    _subnets = search_select(by_xpath(r'//label[text()="Subnet"]/..'))
 
     def select_subnet(self, name):
         self._subnets.select(name)
 
     # node configuration
-    _ssh_keys = search_select(r'//div[./label[contains(text(), "SSH Key Pair")]]')
+    _ssh_keys = search_select(by_xpath(r'//label[contains(text(), "SSH Key Pair")]/..'))
 
     def select_key_pair(self, name):
         self._ssh_keys.select(name)

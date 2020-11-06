@@ -11,6 +11,7 @@
 # under the License.
 import os
 import socket
+import time
 
 import pytest
 from pyasli import BrowserSession
@@ -76,16 +77,11 @@ def rancher_conf():
 @pytest.fixture(scope='session')
 def browser(rancher_conf, base_url):
     instance = BrowserSession(base_url=base_url)
-    capability = DesiredCapabilities.CHROME.copy()
-    capability['acceptInsecureCerts'] = True
+    capability = DesiredCapabilities.FIREFOX.copy()
     with instance:
         instance.setup_browser(
-            'chrome',
-            remote=True,
+            'firefox',
             headless=False,
-            command_executor='http://{}:{}/wd/hub'.format(
-                rancher_conf.bind_host, rancher_conf.selenium_port
-            ),
             desired_capabilities=capability,
         )
         instance.open('')

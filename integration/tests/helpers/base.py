@@ -96,9 +96,12 @@ class _FieldDescriptor:
 
     def __get__(self, instance, owner):
         """Lazy field loading"""
-        if not hasattr(instance, self._name) or getattr(instance, self._name) is None:
-            # _noney is special case for Field
-            # workflow for missing attr is Field -> Element -> Element.get_attribute(...)
+        if not hasattr(instance, self._name) or \
+                getattr(instance, self._name) is None:
+            # None is special case for Field
+            # workflow for missing attr there:
+            # Field.__getattr__ -> Element.__getattr__ ->
+            # -> Element.get_attribute(...) -> WebElement.get_attribute(...)
             value = self._cls(self._locator, instance)
             setattr(instance, self._name, value)
         return getattr(instance, self._name)
