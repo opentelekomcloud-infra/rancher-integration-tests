@@ -16,7 +16,7 @@ from pyasli.conditions import missing
 
 def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
                                assure_cluster_driver, new_cluster_select,
-                               cluster_config, cluster_details, cleanup_cluster):
+                               cluster_config, cleanup_cluster):
     cluster_list.open()
 
     # open creation page
@@ -39,7 +39,7 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # next: Cluster Configuration
     cluster_config.next()
-    time.sleep(1)  # don't rush or lists won't be able to load in time
+    time.sleep(3)  # don't rush or lists won't be able to load in time
     # use default cluster configuration
 
     # next: network configuration
@@ -67,14 +67,11 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
     my_cluster = cluster_list.cluster_row(rancher_conf.cluster_name)
     my_cluster.state.assure('Provisioning', 30)
     my_cluster.state.assure('Active', 900)
-    # go to cluster dashboard
-    my_cluster.to_details()
-
     # remove cluster
-    cluster_details.delete()
+    my_cluster.click_delete()
 
     # wait for cluster to start deleting
     my_cluster.state.assure('Removing', 300)
 
     # wait for cluster to end deleting
-    my_cluster.assure(missing, 450)
+    my_cluster.should_be(missing, 20 * 60)

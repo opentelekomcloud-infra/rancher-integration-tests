@@ -1,68 +1,76 @@
+from __future__ import annotations
+
 import wrapt
 from pyasli import BrowserSession
 from pyasli.bys import CssSelectorOrBy
-from pyasli.conditions import exist
 from pyasli.elements import Element
+from pyasli.elements.elements import FindElementsMixin
 
 
-class Field:
-    """Class for describing fields in class
+class _Wrapper(FindElementsMixin):
+    """Base for Page and Field"""
 
-    Wraps :class:`Element`
+    _base: FindElementsMixin
 
-    Fields can have other fields inside
-    """
+    def element(self, by: CssSelectorOrBy):
+        return self._base.element(by)
 
-    _locator: CssSelectorOrBy
-    _base: Element = None
+    def elements(self, by: CssSelectorOrBy):
+        return self._base.elements(by)
 
-    def __get__(self, instance, owner):
-        """Work as descriptor"""
-        if isinstance(instance, Field):
-            searcher = instance._base
-        elif isinstance(instance, Page):
-            searcher = instance.browser
-        else:
-            raise TypeError(f"Can't use `Field` as attribute of class {owner}")
-        self.__refresh__(searcher)
-        return self
 
-    def __getattribute__(self, item):
-        """Handle child fields with care"""
-        val = super().__getattribute__(item)
-        if isinstance(val, Field):
-            val.__refresh__(self._base)
-        return val
+class Page(_Wrapper):
+    """Base page class"""
 
-    def __getattr__(self, item):
-        """For missing attributes search in wrapped element"""
-        return getattr(self._base, item)
+    url = NotImplemented
+    _base: BrowserSession
 
-    def __init__(self, locator: CssSelectorOrBy):
-        self._locator = locator
+    def __init__(self, browser: BrowserSession):
+        self._base = browser
 
-    def _move_to(self):
-        self._base.assure(exist)
-        return self._base.get_actual().location_once_scrolled_into_view
-
-    def __refresh__(self, searcher):
-        """Method to update element reference if it is already dead"""
-        if self._base is None:
-            self._base = searcher.element(self._locator)
+    @property
+    def browser(self):
         return self._base
 
-    def sub_element(self, locator):
-        """Find sub-element of the field"""
-        return self._base.element(locator)
+    def open(self):
+        return self._base.open(self.url)
 
-    def assure(self, condition, timeout=5):
+    def is_current(self):
+        return self._base.url == self.url
+
+
+@wrapt.decorator
+def on_page(wrapped, instance=None, args=None, kwargs=None):
+    """Run method only if current page is open"""
+    if not isinstance(instance, Page):
+        raise ValueError('`on_page` is only applicable to Page fields')
+    if not instance.is_current:
+        raise AssertionError(f'Page URL mismatch. Expected {type(instance).url},'
+                             f'got {instance.browser.url.url}')
+    return wrapped(*args, **kwargs)
+
+
+class Field(_Wrapper):
+    """Element wrapper
+
+    Narrows Element functionality
+    """
+
+    _base: Element
+
+    def __init__(self, locator: CssSelectorOrBy, parent: _Wrapper):
+        self._locator = locator
+        self._parent = parent
+        self._base = self._parent.element(self._locator)
+
+    def assure(self, condition, timeout=20):
         """Assure wrapped element state
 
         :raises TimeoutError:
         """
         return self._base.assure(condition, timeout)
 
-    def should(self, condition, timeout=5):
+    def should(self, condition, timeout=20):
         """Check wrapped element state
 
         :raises AssertionError:
@@ -71,25 +79,31 @@ class Field:
 
     should_be = should
 
-
-class Page:
-    """Base page class"""
-
-    url = NotImplemented
-
-    def __init__(self, browser: BrowserSession):
-        self.browser = browser
-
-    def open(self):
-        return self.browser.open(self.url)
+    def __getattr__(self, item):
+        """For missing attributes search in wrapped element"""
+        return getattr(self._base, item)
 
 
-@wrapt.decorator
-def on_page(wrapped, instance=None, args=None, kwargs=None):
-    """Run method only if current page is open"""
-    if not isinstance(instance, Page):
-        raise ValueError('`on_page` is only applicable to Page fields')
-    if instance.browser.url != instance.url:
-        raise AssertionError(f'Page URL mismatch. Expected {instance.url},'
-                             f'got {instance.browser.url}')
-    return wrapped(*args, **kwargs)
+class _FieldDescriptor:
+    """Descriptor returning ``Field`` with given class and locator"""
+
+    def __init__(self, locator: CssSelectorOrBy, field_cls: type = Field):
+        self._locator = locator
+        self._cls = field_cls
+
+    def __set_name__(self, owner, name):
+        self._name = f'_field_{name}'
+
+    def __get__(self, instance, owner):
+        """Lazy field loading"""
+        if not hasattr(instance, self._name) or getattr(instance, self._name) is None:
+            # _noney is special case for Field
+            # workflow for missing attr is Field -> Element -> Element.get_attribute(...)
+            value = self._cls(self._locator, instance)
+            setattr(instance, self._name, value)
+        return getattr(instance, self._name)
+
+
+def field(locator: CssSelectorOrBy, cls: type = Field):
+    """Lazy field descriptor"""
+    return _FieldDescriptor(locator, cls)

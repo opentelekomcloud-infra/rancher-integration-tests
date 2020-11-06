@@ -4,55 +4,54 @@ from pyasli.bys import by_xpath
 from pyasli.conditions import clickable, exist, text_is
 from selenium.common.exceptions import WebDriverException
 
-from integration.tests.helpers.base import Field
+from integration.tests.helpers.base import Field, field
 
 
 class TextInput(Field):
     """Text input element"""
 
-    def __get__(self, instance, owner) -> 'TextInput':
-        """This is typing stub"""
-        return super().__get__(instance, owner)
-
     def input(self, text):
         """Replace current field value with given"""
         self._base.assure(exist)
-        self._move_to()
+        self._base.move_to()
         self._base.assure(clickable)
         self._base.click()
         self._base.text = text
+
+    @property
+    def text(self):
+        """Return field text value"""
+        return self._base.value
+
+
+def text_input(locator) -> TextInput:
+    """Lazy TextInput loader"""
+    return field(locator, TextInput)
 
 
 class Button(Field):
     """Button element"""
 
-    def __get__(self, instance, owner) -> 'Button':
-        """This is typing stub"""
-        return super().__get__(instance, owner)
-
     def click(self):
         """Click the button"""
-        self._move_to()
+        self._base.move_to()
         self._base.assure(clickable)
         self._base.click()
+
+
+def button(locator) -> Button:
+    """Lazy Button loader"""
+    return field(locator, Button)
 
 
 class SearchSelect(Field):
     """Container with text input and lines"""
 
-    def __init__(self, xpath):
-        """Searchable select `EmberJS` field
-
-        :param str xpath: base element xpath
-        """
-        super().__init__(by_xpath(xpath))
-        self._base_xpath = xpath
-        self._text_input = TextInput(by_xpath(xpath + r'//input[@type="text"]'))
+    _text_input = text_input('input[type=text]')
 
     @property
     def lines(self):
-        return self._base.browser.elements(
-            by_xpath(self._base_xpath + r'//div[@class="searchable-option"]'))
+        return self._base.elements('div.searchable-option')
 
     def select(self, text, index=0):
         """Select item from list by index after entering some text"""
@@ -68,34 +67,31 @@ class SearchSelect(Field):
             raise Exception(f'Failed to select item.\nScreenshot: {png_path}') from wde
 
 
-class _StateField(Field):
-    _css_selector = 'td.state'
+def search_select(locator):
+    """Ember searchable-select"""
+    return field(locator, SearchSelect)
 
-    def __init__(self):
-        super().__init__(_StateField._css_selector)
+
+class _StateField(Field):
 
     def assure(self, value, timeout=60):
-        super().assure(text_is(value), timeout)
+        return super().assure(text_is(value), timeout)
 
 
-class ClusterRow(Field):
-
-    def __init__(self, cluster_name):
-        self._base_xpath = f'//tr[./td/a[text()="{cluster_name}"]]'
-        super().__init__(by_xpath(self._base_xpath))
-
-    state = _StateField()
-
-    def to_details(self):
-        child_xpath = r'/td[contains(@data-title, "Cluster Name")]/a'
-        edit_link = self._base.browser.element(by_xpath(self._base_xpath + child_xpath))
-        edit_link.click()
+def _state_field(locator) -> _StateField:
+    return field(locator, _StateField)
 
 
-class ClusterDriverRow(Field):
+class Row(Field):
+    """Single cluster/driver row"""
+    state = _state_field('td.state')
+    more_actions = button('div.more-actions')
 
-    def __init__(self, url_text):
-        self._base_xpath = f'//tr[./td[contains(.,"{url_text}")]]'
-        super().__init__(by_xpath(self._base_xpath))
 
-    state = _StateField()
+def cluster_driver_row(url) -> Row:
+    return field(by_xpath(f'//tr[./td[contains(., "{url}")]]'), Row)
+
+
+def cluster_row(name, parent) -> Row:
+    """NB! this is not a descriptor, but an actual Row"""
+    return Row(by_xpath(f'//tr[./td/a[text()="{name}"]]'), parent)

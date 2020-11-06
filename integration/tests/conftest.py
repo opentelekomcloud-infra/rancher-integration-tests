@@ -18,9 +18,8 @@ from selenium.webdriver import DesiredCapabilities
 
 from integration.tests.helpers.api_client import APIClient
 from integration.tests.helpers.pages import (
-    CCEClusterConfigPage, ClusterDashboardPage,
-    ClusterDriversListPage, ClusterListPage, LoginPage,
-    NewClusterSelectPage
+    CCEClusterConfigPage, ClusterDriversListPage,
+    ClusterListPage, LoginPage, NewClusterSelectPage
 )
 
 
@@ -117,11 +116,6 @@ def new_cluster_select(browser):
 @pytest.fixture
 def cluster_config(browser):
     return CCEClusterConfigPage(browser)
-
-
-@pytest.fixture
-def cluster_details(browser):
-    return ClusterDashboardPage(browser)
 
 
 @pytest.fixture(scope='session')
