@@ -9,6 +9,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import time
+
 from pyasli.conditions import missing
 
 
@@ -37,6 +39,7 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # next: Cluster Configuration
     cluster_config.next()
+    time.sleep(1)  # don't rush or lists won't be able to load in time
     # use default cluster configuration
 
     # next: network configuration

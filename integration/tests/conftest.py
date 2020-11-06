@@ -90,6 +90,7 @@ def browser(rancher_conf, base_url):
             desired_capabilities=capability,
         )
         instance.open('')
+        instance.get_actual().set_window_size(1552, 840)
         yield instance
 
 

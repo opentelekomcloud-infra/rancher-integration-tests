@@ -88,8 +88,8 @@ class ClusterRow(Field):
 
     def to_details(self):
         child_xpath = r'/td[contains(@data-title, "Cluster Name")]/a'
-        edit_lint = self._base.browser.elements(by_xpath(self._base_xpath + child_xpath))
-        edit_lint.click()
+        edit_link = self._base.browser.element(by_xpath(self._base_xpath + child_xpath))
+        edit_link.click()
 
 
 class ClusterDriverRow(Field):

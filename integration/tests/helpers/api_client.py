@@ -99,4 +99,4 @@ class APIClient:
             return
         resp = self.session.delete(cluster['links']['remove'])
         assert resp.status_code == 200
-        self.wait_for_404(cluster['links']['self'], timeout=5 * 60)
+        self.wait_for_404(cluster['links']['self'], timeout=30 * 60)

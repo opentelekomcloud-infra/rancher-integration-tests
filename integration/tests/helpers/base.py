@@ -34,6 +34,10 @@ class Field:
             val.__refresh__(self._base)
         return val
 
+    def __getattr__(self, item):
+        """For missing attributes search in wrapped element"""
+        return getattr(self._base, item)
+
     def __init__(self, locator: CssSelectorOrBy):
         self._locator = locator
 
@@ -48,7 +52,7 @@ class Field:
         return self._base
 
     def sub_element(self, locator):
-        """Find subelement if the field"""
+        """Find sub-element of the field"""
         return self._base.element(locator)
 
     def assure(self, condition, timeout=5):

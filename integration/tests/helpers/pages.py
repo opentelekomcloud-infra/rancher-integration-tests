@@ -1,25 +1,12 @@
 import wrapt
 from pyasli import wait_for
 from pyasli.bys import by_css, by_id, by_xpath
-from pyasli.conditions import enabled, hidden, visible
+from pyasli.conditions import enabled, hidden, missing, visible
 
 from integration.tests.helpers.base import Field, Page, on_page
 from integration.tests.helpers.fields import (
     Button, ClusterDriverRow, ClusterRow, SearchSelect, TextInput
 )
-
-
-def requires_visible(locator, timeout=10):
-    """Run method only after required element becomes visible"""
-
-    @wrapt.decorator
-    def _requires_visible(wrapped, instance=None, args=None, kwargs=None):
-        if not isinstance(instance, Page):
-            raise ValueError('`requires_visible` is only applicable to Page fields')
-        instance.browser.element(locator).assure(visible, timeout)
-        return wrapped(*args, **kwargs)
-
-    return _requires_visible
 
 
 def requires_not_existing(locator, timeout=10):
@@ -61,7 +48,7 @@ class LoginPage(Page):
 
     def __modal_shown(self):
         try:
-            wait_for(self._modal_ok, visible, 1)
+            wait_for(self._modal_ok._base, visible, 1)
             return True
         except TimeoutError:
             return False
@@ -90,17 +77,18 @@ class ClusterDriversListPage(Page):
     _domain = TextInput(by_xpath(r"//span[@data-title='Whitelist Domains']/input"))
     _create = Button(by_xpath(r"//button[contains(., 'Create')]"))
 
-    __modal_locator = by_css('form.modal-container.large-modal')
+    _modal_window = Field('form.modal-container.large-modal')
 
-    @requires_visible(__modal_locator)
     def register_driver(self, url, ui_url, allowed_domain=''):
         """Register new cluster driver"""
+        self._modal_window.assure(visible)
         self._download_url.input(url)
         self._custom_ui_url.input(ui_url)
         if allowed_domain:
             self._add_domain.click()
             self._domain.input(allowed_domain)
         self._create.click()
+        self._modal_window.assure(missing)
 
     # table
     @property
@@ -188,7 +176,7 @@ class CCEClusterConfigPage(Page):
 
 class ClusterDashboardPage(Page):
     _more_actions = Button('div.more-actions')
-    _delete_button = Button(r'//span[contains(text(), "Delete")]')
+    _delete_button = Button(by_xpath(r'//span[contains(text(), "Delete")]'))
     _delete_confirm_button = Button('div.footer-actions .bg-error')
 
     def delete(self):
