@@ -1,7 +1,7 @@
 import random
 
 from pyasli.bys import by_xpath
-from pyasli.conditions import clickable, text_is, visible
+from pyasli.conditions import clickable, exist, text_is, visible
 from selenium.common.exceptions import WebDriverException
 
 from integration.tests.helpers.base import Field, field
@@ -12,6 +12,7 @@ class TextInput(Field):
 
     def input(self, text):
         """Replace current field value with given"""
+        self._base.assure(exist)
         self._base.assure(visible)
         self._base.move_to()
         self._base.assure(clickable)

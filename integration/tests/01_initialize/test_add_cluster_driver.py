@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-def test_add_cluster_driver(rancher_conf, cluster_driver_list,
-                            api_client, cleanup_cluster_driver):
+def test_add_cluster_driver(cleanup_cluster_driver, signed_in,
+                            cluster_driver_list, api_client,
+                            rancher_conf):
     cluster_driver_list.open()
 
     # click "Add Cluster Driver"

@@ -11,7 +11,6 @@
 # under the License.
 import os
 import socket
-import time
 
 import pytest
 from pyasli import BrowserSession

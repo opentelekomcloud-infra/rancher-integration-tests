@@ -157,7 +157,9 @@ class CCEClusterConfigPage(Page):
         self._project_name.input(project)
 
     # network configuration
-    _vpcs = search_select(by_xpath(r'//label[contains(text(), "Virtual Private Cloud")]/..'))
+    _vpcs = search_select(by_xpath(
+        r'//label[contains(text(), "Virtual Private Cloud")]/..'
+    ))
 
     def select_vpc(self, name):
         self._vpcs.select(name, 0)
