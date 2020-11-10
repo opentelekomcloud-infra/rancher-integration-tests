@@ -108,7 +108,7 @@ class ClusterListPage(Page):
         return cluster_row(name, self)
 
     def delete(self, name):
-        self.cluster_row(name).more_actions()
+        self.cluster_row(name).more_actions.click()
         self._delete_button.click()
         self._delete_confirm_button.click()
 
