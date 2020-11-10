@@ -11,8 +11,10 @@
 # under the License.
 import os
 import socket
+import time
 
 import pytest
+import requests
 from pyasli import BrowserSession
 from selenium.webdriver import DesiredCapabilities
 
@@ -74,7 +76,25 @@ def rancher_conf():
 
 
 @pytest.fixture(scope='session')
-def browser(rancher_conf, base_url):
+def server_is_up(rancher_conf):
+    session = requests.session()
+    session.verify = False
+    end_time = time.monotonic() + 20
+
+    url = f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}'
+    while time.monotonic() < end_time:
+        try:
+            resp = session.head(url)
+            time.sleep(1)
+        except requests.ConnectionError:
+            continue
+        if resp.status_code == 200:
+            return
+    raise TimeoutError('Server is not up and running after given timeout')
+
+
+@pytest.fixture(scope='session')
+def browser(rancher_conf, base_url, server_is_up):
     instance = BrowserSession(base_url=base_url)
     capability = DesiredCapabilities.CHROME.copy()
     capability['acceptInsecureCerts'] = True
