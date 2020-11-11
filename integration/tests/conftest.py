@@ -11,20 +11,42 @@
 # under the License.
 import os
 import socket
-import pytest
+import time
 
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import pytest
+import requests
+from pyasli import BrowserSession
+from selenium.webdriver import DesiredCapabilities
+
+from integration.tests.helpers.api_client import APIClient
+from integration.tests.helpers.pages import (
+    CCEClusterConfigPage, ClusterDriversListPage,
+    ClusterListPage, LoginPage, NewClusterSelectPage
+)
 
 
 class RancherConfig:
-    pass
+    bind_host: str
+    password: str
+    rancher_port: str
+    selenium_port: str
+    rancher_password: str
+    kontainer_driver_location: str
+    kontainer_driver_ui_location: str
+    whitelist: str
+    cluster_name: str
+    cce_domain_name: str
+    cce_project_name: str
+    cce_user_name: str
+    cce_password: str
+    vpc_name: str
+    subnet_name: str
+    keypair_name: str
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def rancher_conf():
     obj = RancherConfig()
-    obj.password = 'abc'
     obj.bind_host = os.environ.get('RANCHER_BIND_HOST')
     if not obj.bind_host:
         try:
@@ -53,14 +75,105 @@ def rancher_conf():
     yield obj
 
 
-@pytest.fixture
-def selenium_driver(rancher_conf):
-    capability = DesiredCapabilities.CHROME
+@pytest.fixture(scope='session')
+def server_is_up(rancher_conf):
+    session = requests.session()
+    session.verify = False
+    end_time = time.monotonic() + 20
+
+    url = f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}'
+    while time.monotonic() < end_time:
+        try:
+            resp = session.head(url)
+            time.sleep(1)
+        except requests.ConnectionError:
+            continue
+        if resp.status_code == 200:
+            return
+    raise TimeoutError('Server is not up and running after given timeout')
+
+
+@pytest.fixture(scope='session')
+def browser(rancher_conf, base_url, server_is_up):
+    instance = BrowserSession(base_url=base_url)
+    capability = DesiredCapabilities.CHROME.copy()
     capability['acceptInsecureCerts'] = True
-    driver = webdriver.Remote(
-        command_executor='http://%s:%s/wd/hub' % (
-            rancher_conf.bind_host, rancher_conf.selenium_port),
-        desired_capabilities=capability)
-    driver.implicitly_wait(30)
-    yield driver
-    driver.quit()
+    with instance:
+        instance.setup_browser(
+            'chrome',
+            remote=True,
+            headless=False,
+            command_executor='http://{}:{}/wd/hub'.format(
+                rancher_conf.bind_host, rancher_conf.selenium_port
+            ),
+            desired_capabilities=capability,
+        )
+        instance.open('')
+        instance.get_actual().set_window_size(1552, 840)
+        yield instance
+
+
+@pytest.fixture(scope='session')
+def base_url(rancher_conf):
+    return f'https://{rancher_conf.bind_host}:{rancher_conf.rancher_port}'
+
+
+@pytest.fixture
+def cluster_driver_list(browser):
+    return ClusterDriversListPage(browser)
+
+
+@pytest.fixture
+def cluster_list(browser):
+    return ClusterListPage(browser)
+
+
+@pytest.fixture
+def new_cluster_select(browser):
+    return NewClusterSelectPage(browser)
+
+
+@pytest.fixture
+def cluster_config(browser):
+    return CCEClusterConfigPage(browser)
+
+
+@pytest.fixture(scope='session')
+def signed_in(browser, rancher_conf):
+    login_page = LoginPage(browser)
+    # login as admin
+    login_page.login('', 'admin', rancher_conf.rancher_password)
+    return browser
+
+
+@pytest.fixture(scope='session')
+def api_client(signed_in):
+    """HTTP client
+
+    Cookies inherited from browser session
+    """
+    return APIClient.from_browser_session(signed_in)
+
+
+@pytest.fixture(scope='session')
+def cleanup_cluster_driver(api_client):
+    yield
+    api_client.delete_cce_driver()
+
+
+@pytest.fixture(scope='session')
+def assure_cluster_driver(api_client, rancher_conf):
+    """Create cluster driver if it is missing"""
+    existing = api_client.find_cce_driver()
+    if existing is not None:
+        return
+    api_client.create_cluster_driver(
+        rancher_conf.kontainer_driver_location,
+        rancher_conf.kontainer_driver_ui_location,
+    )
+
+
+@pytest.fixture()
+def cleanup_cluster(api_client, rancher_conf):
+    yield
+    api_client.delete_cluster(rancher_conf.cluster_name)
