@@ -1,18 +1,12 @@
+import logging
 import time
 
 import requests
 from pyasli import BrowserSession
 from requests import Session
 
-
-def _immutable_dict(src: dict):
-    res = src.copy()
-    res.update = NotImplemented
-    res.__setitem__ = NotImplemented
-    return res
-
-
 CCE_DRIVER_NAME = 'otccce'
+LOGGER = logging.getLogger('helpers.api')
 
 
 class APIClient:
@@ -38,6 +32,7 @@ class APIClient:
         sess.cookies.update({c['name']: c['value'] for c in cookies})
         sess.headers = {'X-API-CSRF': sess.cookies.get('CSRF')}
         instance.session = sess
+        LOGGER.debug('Created new API session from browser session')
         return instance
 
     _cluster_driver_list_url = '/v3/kontainerDrivers'
@@ -58,6 +53,7 @@ class APIClient:
         }
         resp = self.session.post(self._cluster_driver_list_url, json=data)
         assert resp.status_code in [200, 201], f'{resp.status_code} not in [200, 201]'
+        LOGGER.debug('Successfully created driver via API: \n%s', resp.json())
         return resp.json()
 
     def find_cce_driver(self):
@@ -66,16 +62,21 @@ class APIClient:
                                 params={'name': CCE_DRIVER_NAME})
         drivers = resp.json()['data']
         if not drivers:
+            LOGGER.debug('Found no driver with name %s', CCE_DRIVER_NAME)
             return None
+        LOGGER.debug('Found %s drivers with name %s',
+                     len(drivers), CCE_DRIVER_NAME)
         return drivers[0]
 
     def delete_cce_driver(self):
         driver = self.find_cce_driver()
         if driver is None:
+            LOGGER.debug('No driver exists, nothing to delete')
             return
         resp = self.session.delete(driver['links']['remove'])
         assert resp.status_code == 200
         self.wait_for_404(driver['links']['self'])
+        LOGGER.debug('CCE driver deleted')
 
     def wait_for_404(self, url, timeout=30):
         end_time = time.monotonic() + timeout
@@ -90,13 +91,18 @@ class APIClient:
                                 params={'driver': CCE_DRIVER_NAME, 'name': name})
         clusters = resp.json()['data']
         if not clusters:
+            LOGGER.debug('Found no `%s` cluster with name %s', CCE_DRIVER_NAME, name)
             return None
+        LOGGER.debug('Found %s `%s` cluster(s) with name %s',
+                     len(clusters), CCE_DRIVER_NAME, name)
         return clusters[0]
 
     def delete_cluster(self, name):
         cluster = self.find_cluster(name)
         if cluster is None:
+            LOGGER.debug('No cluster exists, nothing to delete')
             return
         resp = self.session.delete(cluster['links']['remove'])
         assert resp.status_code == 200
         self.wait_for_404(cluster['links']['self'], timeout=30 * 60)
+        LOGGER.debug('CCE cluster deleted')

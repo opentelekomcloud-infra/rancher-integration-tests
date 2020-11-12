@@ -1,3 +1,5 @@
+import logging
+
 import wrapt
 from pyasli import wait_for
 from pyasli.bys import by_css, by_id, by_xpath
@@ -7,6 +9,8 @@ from integration.tests.helpers.base import Page, field, on_page
 from integration.tests.helpers.fields import (
     button, cluster_driver_row, cluster_row, search_select, text_input
 )
+
+LOGGER = logging.getLogger('helpers.pages')
 
 
 def requires_not_existing(locator, timeout=10):
@@ -38,6 +42,7 @@ class LoginPage(Page):
         :param str username: Rancher user name
         :param str password: Rancher password
         """
+        LOGGER.info('Start logging in')
         self._base.open(next_url)
         self._username.input(username)
         self._password.input(password)
@@ -48,9 +53,11 @@ class LoginPage(Page):
 
     def __modal_shown(self):
         try:
-            wait_for(self._modal_ok, visible, 1)
+            wait_for(self._modal_ok, visible, 5)
+            LOGGER.info('First-time modal is shown')
             return True
         except TimeoutError:
+            LOGGER.info('First-time modal is NOT shown')
             return False
 
     def _close_optional_modal(self):
@@ -81,10 +88,12 @@ class ClusterDriversListPage(Page):
 
     def register_driver(self, url, ui_url, allowed_domain=''):
         """Register new cluster driver"""
+        LOGGER.info('Start cluster driver registration')
         self._modal_window.assure(visible)
         self._download_url.input(url)
         self._custom_ui_url.input(ui_url)
         if allowed_domain:
+            LOGGER.debug('Allowed domain: %s', allowed_domain)
             self._add_domain.click()
             self._domain.input(allowed_domain)
         self._create.click()
@@ -108,6 +117,7 @@ class ClusterListPage(Page):
         return cluster_row(name, self)
 
     def delete(self, name):
+        LOGGER.info('Start cluster driver removal')
         self.cluster_row(name).more_actions.click()
         self._delete_button.click()
         self._delete_confirm_button.click()
@@ -134,6 +144,7 @@ class CCEClusterConfigPage(Page):
     _save = button(r'button[type=submit]')
 
     def next(self):
+        LOGGER.info('Click "Next"')
         self._save.should_be(enabled)
         self._save.click()
 
@@ -151,6 +162,7 @@ class CCEClusterConfigPage(Page):
     _password = text_input(r'input.ember-text-field[name=passsword]')
 
     def input_credentials(self, domain, username, password, project):
+        LOGGER.info('Input OTC credentials')
         self._domain_name.input(domain)
         self._username.input(username)
         self._password.input(password)
@@ -162,15 +174,18 @@ class CCEClusterConfigPage(Page):
     ))
 
     def select_vpc(self, name):
+        LOGGER.info('Select VPC')
         self._vpcs.select(name, 0)
 
     _subnets = search_select(by_xpath(r'//label[text()="Subnet"]/..'))
 
     def select_subnet(self, name):
+        LOGGER.info('Select subnet')
         self._subnets.select(name)
 
     # node configuration
     _ssh_keys = search_select(by_xpath(r'//label[contains(text(), "SSH Key Pair")]/..'))
 
     def select_key_pair(self, name):
+        LOGGER.info('Select key pair')
         self._ssh_keys.select(name)

@@ -1,3 +1,4 @@
+import logging
 import random
 
 from pyasli.bys import by_xpath
@@ -5,6 +6,8 @@ from pyasli.conditions import clickable, exist, text_is, visible
 from selenium.common.exceptions import WebDriverException
 
 from integration.tests.helpers.base import Field, field
+
+LOGGER = logging.getLogger('helpers.fields')
 
 
 class TextInput(Field):
@@ -18,6 +21,7 @@ class TextInput(Field):
         self._base.assure(clickable)
         self._base.click()
         self._base.text = text
+        LOGGER.debug('Entered text "%s" into %s', text, self._base)
 
     @property
     def text(self):
@@ -38,6 +42,7 @@ class Button(Field):
         self._base.move_to()
         self._base.assure(clickable)
         self._base.click()
+        LOGGER.debug('Clicked button %s', self._base)
 
 
 def button(locator) -> Button:
@@ -60,6 +65,7 @@ class SearchSelect(Field):
         try:
             self._text_input.input(text)
             self.lines[index].click()
+            LOGGER.debug('Selected item #%d by text "%s"', index, text)
         except WebDriverException as wde:
             screenshot = self._base.browser.get_actual().get_screenshot_as_png()
             png_path = f'logs/select-fail-{random.randrange(0xffffff):06x}.png'
