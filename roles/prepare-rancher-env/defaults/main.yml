@@ -1,7 +1,7 @@
 ---
 # defaults file for prepare-rancher-env
-rancher_image: rancher/rancher:v2.4.8
-selenium_chrome_image: selenium/standalone-chrome
+rancher_image: swr.eu-de.otc.t-systems.com/community/rancher:v2.4.8
+selenium_chrome_image: swr.eu-de.otc.t-systems.com/community/selenium-standalone-chrome:latest
 
 bind_host: "{{ ansible_default_ipv4.address }}"
 rancher_port: 8003

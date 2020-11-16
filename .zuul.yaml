@@ -9,7 +9,7 @@
     abstract: true
     nodeset: ubuntu-focal
     vars:
-      rancher_image: rancher/rancher:v2.4.8
+      rancher_image: swr.eu-de.otc.t-systems.com/community/rancher:v2.4.8
       tox_envlist: register
       python_version: 3.8
 
@@ -122,9 +122,10 @@
     merge-mode: squash-merge
     check:
       jobs:
-        - tox-pep8
+        - otc-tox-pep8
         - rancher-register-driver-latest
         - rancher-register-driver-devel
     check-post:
       jobs:
+        - otc-tox-pep8
         - rancher-integration-latest
