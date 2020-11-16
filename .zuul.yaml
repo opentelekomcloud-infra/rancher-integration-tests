@@ -9,7 +9,7 @@
     abstract: true
     nodeset: ubuntu-focal
     vars:
-      rancher_image: swr.eu-de.otc.t-systems.com/community/rancher:v2.4.8
+      rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
       python_version: 3.8
 
