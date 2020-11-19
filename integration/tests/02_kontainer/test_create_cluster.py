@@ -13,6 +13,11 @@ import time
 
 from pyasli.conditions import missing
 
+from integration.tests.helpers.timeouts import (
+    CLUSTER_ACTIVE, CLUSTER_DELETED,
+    CLUSTER_DELETING, CLUSTER_PROVISIONING
+)
+
 
 def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
                                assure_cluster_driver, new_cluster_select,
@@ -65,13 +70,13 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
     # =====
     # find cluster row in list
     my_cluster = cluster_list.cluster_row(rancher_conf.cluster_name)
-    my_cluster.state.assure('Provisioning', 30)
-    my_cluster.state.assure('Active', 900)
+    my_cluster.state.assure('Provisioning', CLUSTER_PROVISIONING)
+    my_cluster.state.assure('Active', CLUSTER_ACTIVE)
     # remove cluster
     cluster_list.delete(rancher_conf.cluster_name)
 
     # wait for cluster to start deleting
-    my_cluster.state.assure('Removing', 300)
+    my_cluster.state.assure('Removing', CLUSTER_DELETING)
 
     # wait for cluster to end deleting
-    my_cluster.should_be(missing, 20 * 60)
+    my_cluster.should_be(missing, CLUSTER_DELETED)

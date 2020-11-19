@@ -5,6 +5,8 @@ import requests
 from pyasli import BrowserSession
 from requests import Session
 
+from integration.tests.helpers.timeouts import CLUSTER_DELETED
+
 CCE_DRIVER_NAME = 'otccce'
 LOGGER = logging.getLogger('helpers.api')
 
@@ -104,5 +106,5 @@ class APIClient:
             return
         resp = self.session.delete(cluster['links']['remove'])
         assert resp.status_code == 200
-        self.wait_for_404(cluster['links']['self'], timeout=30 * 60)
+        self.wait_for_404(cluster['links']['self'], timeout=CLUSTER_DELETED)
         LOGGER.debug('CCE cluster deleted')
