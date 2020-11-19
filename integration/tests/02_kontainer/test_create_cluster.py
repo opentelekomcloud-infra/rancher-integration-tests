@@ -9,6 +9,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import logging
 import time
 
 from pyasli.conditions import missing
@@ -18,6 +19,8 @@ from integration.tests.helpers.timeouts import (
     CLUSTER_DELETING, CLUSTER_PROVISIONING
 )
 
+LOGGER = logging.getLogger(__name__)
+
 
 def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
                                assure_cluster_driver, new_cluster_select,
@@ -26,9 +29,11 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # open creation page
     cluster_list.click_new_cluster()
+    LOGGER.info("New cluster page opened")
 
     # select OTC CCE
     new_cluster_select.click_new_cce_cluster()
+    LOGGER.info("Open Telekom Cloud CCE driver selected")
 
     # setup new cluster
 
@@ -41,14 +46,17 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
         rancher_conf.cce_password,
         rancher_conf.cce_project_name,
     )
+    LOGGER.info("OTC credentials entered. Logged in.")
 
     # next: Cluster Configuration
     cluster_config.next()
     time.sleep(3)  # don't rush or lists won't be able to load in time
+    LOGGER.info("Cluster configuration")
     # use default cluster configuration
 
     # next: network configuration
     cluster_config.next()
+    LOGGER.info("Network configuration")
     # select required VPC
     cluster_config.select_vpc(rancher_conf.vpc_name)
     # select required Subnet
@@ -56,27 +64,36 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # next: Cluster Floating IP
     cluster_config.next()
+    LOGGER.info("Cluster Floating IP")
 
     # next: Node Configuration
     cluster_config.next()
+    LOGGER.info("Node configuration")
     cluster_config.select_key_pair(rancher_conf.keypair_name)
 
     # next: Nodes disk configuration
     cluster_config.next()
+    LOGGER.info("Node disks configuration")
     # use default configuration
     # finish creation
     cluster_config.next()
+    LOGGER.info("CCE cluster creation form submitted")
 
     # =====
     # find cluster row in list
     my_cluster = cluster_list.cluster_row(rancher_conf.cluster_name)
     my_cluster.state.assure('Provisioning', CLUSTER_PROVISIONING)
+    LOGGER.info("CCE cluster provisioning started")
     my_cluster.state.assure('Active', CLUSTER_ACTIVE)
+    LOGGER.info("CCE cluster is Active")
     # remove cluster
     cluster_list.delete(rancher_conf.cluster_name)
+    LOGGER.info("CCE cluster deletion starting")
 
     # wait for cluster to start deleting
     my_cluster.state.assure('Removing', CLUSTER_DELETING)
+    LOGGER.info("CCE cluster is in removing state")
 
     # wait for cluster to end deleting
     my_cluster.should_be(missing, CLUSTER_DELETED)
+    LOGGER.info("CCE cluster is deleted")
