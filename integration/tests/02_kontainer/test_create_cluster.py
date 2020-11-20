@@ -1,4 +1,4 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License'); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
 #
@@ -29,11 +29,11 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # open creation page
     cluster_list.click_new_cluster()
-    LOGGER.info("New cluster page opened")
+    LOGGER.info('New cluster page opened')
 
     # select OTC CCE
     new_cluster_select.click_new_cce_cluster()
-    LOGGER.info("Open Telekom Cloud CCE driver selected")
+    LOGGER.info('Open Telekom Cloud CCE driver selected')
 
     # setup new cluster
 
@@ -46,17 +46,17 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
         rancher_conf.cce_password,
         rancher_conf.cce_project_name,
     )
-    LOGGER.info("OTC credentials entered. Logged in.")
+    LOGGER.info('OTC credentials entered. Logged in.')
 
     # next: Cluster Configuration
     cluster_config.next()
     time.sleep(3)  # don't rush or lists won't be able to load in time
-    LOGGER.info("Cluster configuration")
+    LOGGER.info('Cluster configuration')
     # use default cluster configuration
 
     # next: network configuration
     cluster_config.next()
-    LOGGER.info("Network configuration")
+    LOGGER.info('Network configuration')
     # select required VPC
     cluster_config.select_vpc(rancher_conf.vpc_name)
     # select required Subnet
@@ -64,36 +64,36 @@ def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
 
     # next: Cluster Floating IP
     cluster_config.next()
-    LOGGER.info("Cluster Floating IP")
+    LOGGER.info('Cluster Floating IP')
 
     # next: Node Configuration
     cluster_config.next()
-    LOGGER.info("Node configuration")
+    LOGGER.info('Node configuration')
     cluster_config.select_key_pair(rancher_conf.keypair_name)
 
     # next: Nodes disk configuration
     cluster_config.next()
-    LOGGER.info("Node disks configuration")
+    LOGGER.info('Node disks configuration')
     # use default configuration
     # finish creation
     cluster_config.next()
-    LOGGER.info("CCE cluster creation form submitted")
+    LOGGER.info('CCE cluster creation form submitted')
 
     # =====
     # find cluster row in list
     my_cluster = cluster_list.cluster_row(rancher_conf.cluster_name)
     my_cluster.state.assure('Provisioning', CLUSTER_PROVISIONING)
-    LOGGER.info("CCE cluster provisioning started")
+    LOGGER.info('CCE cluster provisioning started')
     my_cluster.state.assure('Active', CLUSTER_ACTIVE)
-    LOGGER.info("CCE cluster is Active")
+    LOGGER.info('CCE cluster is Active')
     # remove cluster
     cluster_list.delete(rancher_conf.cluster_name)
-    LOGGER.info("CCE cluster deletion starting")
+    LOGGER.info('CCE cluster deletion starting')
 
     # wait for cluster to start deleting
     my_cluster.state.assure('Removing', CLUSTER_DELETING)
-    LOGGER.info("CCE cluster is in removing state")
+    LOGGER.info('CCE cluster is in removing state')
 
     # wait for cluster to end deleting
     my_cluster.should_be(missing, CLUSTER_DELETED)
-    LOGGER.info("CCE cluster is deleted")
+    LOGGER.info('CCE cluster is deleted')
