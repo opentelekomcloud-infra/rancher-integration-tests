@@ -22,6 +22,7 @@ from integration.tests.helpers.timeouts import (
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.integration
 def test_cce_cluster_lifecycle(rancher_conf, signed_in, cluster_list,
                                assure_cluster_driver, new_cluster_select,
                                cluster_config, cleanup_cluster):

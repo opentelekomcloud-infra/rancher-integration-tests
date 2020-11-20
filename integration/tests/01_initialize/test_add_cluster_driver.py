@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
+@pytest.mark.register
 def test_add_cluster_driver(cleanup_cluster_driver, signed_in,
                             cluster_driver_list, api_client,
                             rancher_conf):
