@@ -12,6 +12,7 @@
 import logging
 import time
 
+import pytest
 from pyasli.conditions import missing
 
 from integration.tests.helpers.timeouts import (

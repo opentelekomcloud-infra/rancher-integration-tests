@@ -2,7 +2,7 @@ import logging
 
 import wrapt
 from pyasli import wait_for
-from pyasli.bys import by_css, by_id, by_xpath
+from pyasli.bys import by_xpath
 from pyasli.conditions import enabled, hidden, missing, visible
 
 from integration.tests.helpers.base import Page, field, on_page
@@ -29,11 +29,11 @@ def requires_not_existing(locator, timeout=10):
 class LoginPage(Page):
     url = '/login'
 
-    _username = text_input(by_id('login-username-local'))
-    _password = text_input(by_id('login-password-local'))
-    _sign_in = button(by_css('button.bg-primary'))
+    _username = text_input('#login-username-local')
+    _password = text_input('#login-password-local')
+    _sign_in = button('button.bg-primary')
 
-    _modal_ok = button(by_css('div.footer-actions .btn'))
+    _modal_ok = button('div.footer-actions .btn')
 
     def login(self, next_url, username, password):
         """Login user and open URL

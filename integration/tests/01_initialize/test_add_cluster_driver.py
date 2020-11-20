@@ -9,6 +9,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import pytest
+
+from integration.tests.helpers.timeouts import DRIVER_ACTIVATING
 
 
 @pytest.mark.register
@@ -28,5 +31,5 @@ def test_add_cluster_driver(cleanup_cluster_driver, signed_in,
     )
 
     # wait until CCE driver state is "Active"
-    cluster_driver_list.driver_row.state.assure('Activating')
+    cluster_driver_list.driver_row.state.assure('Activating', DRIVER_ACTIVATING)
     cluster_driver_list.driver_row.state.assure('Active')
