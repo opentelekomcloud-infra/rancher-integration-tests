@@ -14,7 +14,7 @@ import pytest
 from integration.tests.helpers.timeouts import DRIVER_ACTIVATING
 
 
-@pytest.mark.register
+@pytest.mark.registration
 def test_add_cluster_driver(cleanup_cluster_driver, signed_in,
                             cluster_driver_list, api_client,
                             rancher_conf):
