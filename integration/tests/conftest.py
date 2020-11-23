@@ -109,7 +109,9 @@ def browser(rancher_conf, base_url, server_is_up):
             desired_capabilities=capability,
         )
         instance.open('')
-        instance.get_actual().set_window_size(1552, 840)
+        instance.get_actual().implicitly_wait(0.2)
+        instance.get_actual().set_page_load_timeout(30)
+        instance.get_actual().set_window_size(1600, 900)
         yield instance
 
 
