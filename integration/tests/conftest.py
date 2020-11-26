@@ -33,7 +33,7 @@ class RancherConfig:
     rancher_password: str
     kontainer_driver_location: str
     kontainer_driver_ui_location: str
-    whitelist: str
+    whitelist: list
     cluster_name: str
     cce_domain_name: str
     cce_project_name: str
@@ -63,7 +63,7 @@ def rancher_conf():
     obj.kontainer_driver_location = os.environ.get('RANCHER_DRIVER_LOCATION')
     obj.kontainer_driver_ui_location = os.environ.get(
         'RANCHER_DRIVER_UI_LOCATION')
-    obj.whitelist = os.environ.get('RANCHER_WHITELIST')
+    obj.whitelist = os.environ.get('RANCHER_WHITELIST').split(',')
     obj.cluster_name = os.environ.get('RANCHER_CLUSTER_NAME')
     obj.cce_domain_name = os.environ.get('RANCHER_CCE_DOMAIN_NAME')
     obj.cce_project_name = os.environ.get('RANCHER_CCE_PROJECT_NAME')

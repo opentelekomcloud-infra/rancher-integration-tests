@@ -4,7 +4,7 @@ import wrapt
 from pyasli import BrowserSession
 from pyasli.bys import CssSelectorOrBy
 from pyasli.elements import Element
-from pyasli.elements.elements import FindElementsMixin
+from pyasli.elements.elements import ElementCollection, FindElementsMixin
 
 
 class _Wrapper(FindElementsMixin):
@@ -48,6 +48,24 @@ def on_page(wrapped, instance=None, args=None, kwargs=None):
         raise AssertionError(f'Page URL mismatch. Expected {type(instance).url},'
                              f'got {instance.browser.url.url}')
     return wrapped(*args, **kwargs)
+
+
+class Fields(_Wrapper):
+    """Multiple element wrapper.
+
+    Provides way less methods that `Field`
+    """
+
+    _base: ElementCollection
+
+    def __init__(self, locator: CssSelectorOrBy, parent: _Wrapper):
+        self._locator = locator
+        self._parent = parent
+        self._base = self._parent.elements(self._locator)
+
+    def __getitem__(self, item: int) -> Element:
+        self._base.__cached__ = None  # make search non-lazy
+        return self._base[item]
 
 
 class Field(_Wrapper):

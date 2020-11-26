@@ -4,8 +4,9 @@ import wrapt
 from pyasli import wait_for
 from pyasli.bys import by_xpath
 from pyasli.conditions import enabled, hidden, missing, visible
+from pyasli.exceptions import screenshot_on_fail
 
-from integration.tests.helpers.base import Page, field, on_page
+from integration.tests.helpers.base import Fields, Page, field, on_page
 from integration.tests.helpers.fields import (
     button, cluster_driver_row, cluster_row, search_select, text_input
 )
@@ -81,21 +82,38 @@ class ClusterDriversListPage(Page):
     _download_url = text_input(by_xpath(r"//div[contains(., 'Download URL')]/input"))
     _custom_ui_url = text_input(by_xpath(r"//div[contains(., 'Custom UI URL')]/input"))
     _add_domain = button(by_xpath(r"//span[contains(., 'Add Domain')]"))
-    _domain = text_input(by_xpath(r"//span[@data-title='Whitelist Domains']/input"))
+    _domains = field(by_xpath(r"//span[@data-title='Whitelist Domains']/input"), Fields)
     _create = button(by_xpath(r"//button[contains(., 'Create')]"))
 
     _modal_window = field('form.modal-container.large-modal')
 
-    def register_driver(self, url, ui_url, allowed_domain=''):
+    def capture_screenshot(self):
+        return self._base.capture_screenshot()
+
+    @property
+    def log_path(self):
+        return self._base.log_path
+
+    @screenshot_on_fail
+    def _enter_domain(self, index, text):
+        try:
+            self._domains[index].text = text
+        except IndexError:
+            raise AssertionError('Invalid domain input count')
+
+    def register_driver(self, url, ui_url, allowed_domains=()):
         """Register new cluster driver"""
         LOGGER.info('Start cluster driver registration')
         self._modal_window.assure(visible)
         self._download_url.input(url)
         self._custom_ui_url.input(ui_url)
-        if allowed_domain:
-            LOGGER.debug('Allowed domain: %s', allowed_domain)
+
+        LOGGER.debug('Allowed domains: %s', allowed_domains)
+        index = 0
+        for domain in allowed_domains:
             self._add_domain.click()
-            self._domain.input(allowed_domain)
+            self._enter_domain(index, domain)
+            index += 1
         self._create.click()
         self._modal_window.assure(missing)
 
