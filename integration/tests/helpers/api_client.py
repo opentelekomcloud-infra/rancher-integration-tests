@@ -41,7 +41,7 @@ class APIClient:
     _cluster_list_url = '/v3/clusters'
     _cluster_driver_url = '/v3/kontainerDrivers/{id}'
 
-    def create_cluster_driver(self, url, ui_url):
+    def create_cluster_driver(self, url, ui_url, whitelist_domain):
         """Register OTC CCE driver
 
         :return: created driver ID
@@ -51,7 +51,7 @@ class APIClient:
             'builtIn': False,
             'uiUrl': ui_url,
             'url': url,
-            'whitelistDomains': ['*.otc.t-systems.com']
+            'whitelistDomains': [whitelist_domain]
         }
         resp = self.session.post(self._cluster_driver_list_url, json=data)
         assert resp.status_code in [200, 201], f'{resp.status_code} not in [200, 201]'

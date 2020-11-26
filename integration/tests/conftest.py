@@ -172,6 +172,7 @@ def assure_cluster_driver(api_client, rancher_conf):
     api_client.create_cluster_driver(
         rancher_conf.kontainer_driver_location,
         rancher_conf.kontainer_driver_ui_location,
+        rancher_conf.whitelist,
     )
 
 

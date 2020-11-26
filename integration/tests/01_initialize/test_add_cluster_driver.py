@@ -27,7 +27,7 @@ def test_add_cluster_driver(cleanup_cluster_driver, signed_in,
     cluster_driver_list.register_driver(
         rancher_conf.kontainer_driver_location,
         rancher_conf.kontainer_driver_ui_location,
-        '*.otc.t-systems.com'
+        rancher_conf.whitelist,
     )
 
     # wait until CCE driver state is "Active"
