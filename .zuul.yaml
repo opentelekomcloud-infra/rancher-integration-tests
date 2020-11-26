@@ -128,4 +128,4 @@
     check-post:
       jobs:
         - otc-tox-pep8
-        - rancher-integration-latest
+        - rancher-integration-devel
