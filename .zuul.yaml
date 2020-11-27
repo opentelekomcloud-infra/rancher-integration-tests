@@ -129,3 +129,7 @@
       jobs:
         - otc-tox-pep8
         - rancher-integration-devel
+    gate:
+      jobs:
+        - otc-tox-pep8
+        - rancher-integration-devel
