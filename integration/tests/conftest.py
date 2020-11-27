@@ -173,13 +173,13 @@ def cleanup_cluster_driver(api_client):
 def assure_cluster_driver(api_client, rancher_conf):
     """Create cluster driver if it is missing"""
     existing = api_client.find_cce_driver()
-    if existing is not None:
-        return
-    api_client.create_cluster_driver(
-        rancher_conf.kontainer_driver_location,
-        rancher_conf.kontainer_driver_ui_location,
-        rancher_conf.whitelist,
-    )
+    if existing is None:
+        api_client.create_cluster_driver(
+            rancher_conf.kontainer_driver_location,
+            rancher_conf.kontainer_driver_ui_location,
+            rancher_conf.whitelist,
+        )
+    api_client.wait_cce_driver_state('active')
 
 
 @pytest.fixture()

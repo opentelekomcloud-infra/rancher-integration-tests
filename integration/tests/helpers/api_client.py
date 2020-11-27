@@ -5,7 +5,7 @@ import requests
 from pyasli import BrowserSession
 from requests import Session
 
-from integration.tests.helpers.timeouts import CLUSTER_DELETED
+from integration.tests.helpers.timeouts import CLUSTER_DELETED, DRIVER_ACTIVATING
 
 CCE_DRIVER_NAME = 'otccce'
 LOGGER = logging.getLogger('helpers.api')
@@ -41,7 +41,7 @@ class APIClient:
     _cluster_list_url = '/v3/clusters'
     _cluster_driver_url = '/v3/kontainerDrivers/{id}'
 
-    def create_cluster_driver(self, url, ui_url, whitelist_domain):
+    def create_cluster_driver(self, url, ui_url, domains):
         """Register OTC CCE driver
 
         :return: created driver ID
@@ -51,7 +51,7 @@ class APIClient:
             'builtIn': False,
             'uiUrl': ui_url,
             'url': url,
-            'whitelistDomains': [whitelist_domain]
+            'whitelistDomains': domains,
         }
         resp = self.session.post(self._cluster_driver_list_url, json=data)
         assert resp.status_code in [200, 201], f'{resp.status_code} not in [200, 201]'
@@ -69,6 +69,29 @@ class APIClient:
         LOGGER.debug('Found %s drivers with name %s',
                      len(drivers), CCE_DRIVER_NAME)
         return drivers[0]
+
+    def _existing_driver(self):
+        end_time = time.monotonic() + 60
+        # wait for driver to appear in the driver list
+        while time.monotonic() < end_time:
+            _drv = self.find_cce_driver()
+            if _drv is not None:
+                return _drv
+        raise TimeoutError(f'CCE driver not existing after '
+                           f'${DRIVER_ACTIVATING} seconds')
+
+    def wait_cce_driver_state(self, expected='active'):
+        """Wait until driver is activated"""
+        _links = self._existing_driver()['links']
+        end_time = time.monotonic() + DRIVER_ACTIVATING
+        while time.monotonic() < end_time:
+            _drv = self.session.get(_links['self']).json()
+            if _drv['state'] == expected:
+                return
+            time.sleep(1)
+
+        raise TimeoutError(f'CCE driver failed to reach `${expected}` '
+                           f'state in ${DRIVER_ACTIVATING} seconds')
 
     def delete_cce_driver(self):
         driver = self.find_cce_driver()
