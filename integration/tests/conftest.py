@@ -12,6 +12,7 @@
 import os
 import socket
 import time
+from urllib.parse import urlparse
 
 import pytest
 import requests
@@ -46,33 +47,38 @@ class RancherConfig:
 
 @pytest.fixture(scope='session')
 def rancher_conf():
-    obj = RancherConfig()
-    obj.bind_host = os.environ.get('RANCHER_BIND_HOST')
-    if not obj.bind_host:
+    cfg = RancherConfig()
+    cfg.bind_host = os.environ.get('RANCHER_BIND_HOST')
+    if not cfg.bind_host:
         try:
-            obj.bind_host = socket.gethostbyname(socket.gethostname())
+            cfg.bind_host = socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
             cmd = ("ip route | grep default | sed -En 's/.*(via )"
                    "(([0-9]*\\.){3}[0-9]*).*/\2/p'")
-            obj.bind_host = os.popen(cmd).read()
-            print('Using %s as bind_host' % obj.bind_host)
+            cfg.bind_host = os.popen(cmd).read()
+            print('Using %s as bind_host' % cfg.bind_host)
 
-    obj.rancher_port = os.environ.get('RANCHER_PORT', '443')
-    obj.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
-    obj.rancher_password = os.environ.get('RANCHER_PASSWORD')
-    obj.kontainer_driver_location = os.environ.get('RANCHER_DRIVER_LOCATION')
-    obj.kontainer_driver_ui_location = os.environ.get(
+    cfg.rancher_port = os.environ.get('RANCHER_PORT', '443')
+    cfg.selenium_port = os.environ.get('SELENIUM_PORT', '4444')
+    cfg.rancher_password = os.environ.get('RANCHER_PASSWORD')
+    cfg.kontainer_driver_location = os.environ.get('RANCHER_DRIVER_LOCATION')
+    cfg.kontainer_driver_ui_location = os.environ.get(
         'RANCHER_DRIVER_UI_LOCATION')
-    obj.whitelist = os.environ.get('RANCHER_WHITELIST').split(',')
-    obj.cluster_name = os.environ.get('RANCHER_CLUSTER_NAME')
-    obj.cce_domain_name = os.environ.get('RANCHER_CCE_DOMAIN_NAME')
-    obj.cce_project_name = os.environ.get('RANCHER_CCE_PROJECT_NAME')
-    obj.cce_user_name = os.environ.get('RANCHER_CCE_USER_NAME')
-    obj.cce_password = os.environ.get('RANCHER_CCE_PASSWORD')
-    obj.vpc_name = os.environ.get('RANCHER_CCE_VPC_NAME')
-    obj.subnet_name = os.environ.get('RANCHER_CCE_SUBNET_NAME')
-    obj.keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
-    yield obj
+    cfg.whitelist = os.environ.get('RANCHER_WHITELIST').split(',')
+    # add UI location host to whitelist
+    ui_host = urlparse(cfg.kontainer_driver_ui_location).hostname
+    if ui_host not in cfg.whitelist:
+        cfg.whitelist.append(ui_host)
+
+    cfg.cluster_name = os.environ.get('RANCHER_CLUSTER_NAME')
+    cfg.cce_domain_name = os.environ.get('RANCHER_CCE_DOMAIN_NAME')
+    cfg.cce_project_name = os.environ.get('RANCHER_CCE_PROJECT_NAME')
+    cfg.cce_user_name = os.environ.get('RANCHER_CCE_USER_NAME')
+    cfg.cce_password = os.environ.get('RANCHER_CCE_PASSWORD')
+    cfg.vpc_name = os.environ.get('RANCHER_CCE_VPC_NAME')
+    cfg.subnet_name = os.environ.get('RANCHER_CCE_SUBNET_NAME')
+    cfg.keypair_name = os.environ.get('RANCHER_CCE_KEYPAIR_NAME')
+    return cfg
 
 
 @pytest.fixture(scope='session')
