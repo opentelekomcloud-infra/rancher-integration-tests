@@ -1,23 +1,135 @@
 ---
+
 - job:
-    name: rancher-kontainer-integration
+    name: rancher-integration-base
+    parent: tox
     description: |
-      Run Functional tests of the driver on Rancher+OTC.
+      Prepare Rancher/Selenium
     pre-run: playbooks/rancher-kontainer/pre.yaml
-    run: playbooks/rancher-kontainer/run.yaml
+    abstract: true
+    nodeset: ubuntu-focal
     vars:
-      functest_project_name: "eu-de_zuul_rancher"
       rancher_image: rancher/rancher:v2.4.8
+      tox_envlist: register
       python_version: 3.8
-      node_version: 10
+
+- job:
+    name: rancher-integration-devel-base
+    parent: rancher-integration-base
+    description: |
+      Prepare Rancher/Selenium and build driver from sources
+    pre-run:
+      - playbooks/rancher-kontainer/prepare_artifacts.yaml
+    abstract: true
+    vars:
+      # Building ui driver
+      node_version: 14
       kontainer_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/kontainer-engine-driver-otc'].src_dir }}"
       ui_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/ui-cluster-driver-otc'].src_dir }}"
-    nodeset:
-      nodes:
-        - name: rancher
-          label: ubuntu-focal
     required-projects:
       - opentelekomcloud/kontainer-engine-driver-otc
       - opentelekomcloud/ui-cluster-driver-otc
 
+- job:
+    name: rancher-register-driver-latest
+    parent: rancher-integration-base
+    description: |
+      Test the latest released artifacts
+    vars:
+      tox_envlist: register
 
+- job:
+    name: rancher-register-driver-devel
+    parent: rancher-integration-devel-base
+    description: |
+      Test the devel artifacts
+    vars:
+      tox_envlist: register
+
+- secret:
+    name: rancher-func-creds
+    data:
+      username: !encrypted/pkcs1-oaep
+        - r9PjaEG9cBJ8aEAg7gFrnkXOmFxYB6LAvsnqO2Mq5kavhw2+d/PW0j+E3La+O4c1z4QFX
+          fcS9EeUwwhbbwsbixCdsaGE/oHO6du0AwI+4P9oQDxA3pRxDLQjq5TdmIanfOu8h1ouFd
+          xsVGdzlfXkofK4zMtZgTJBaGPKDJ8ktX5LxuqppCsDf/KYufD6yyxLnvkPaxUo6Y327Ro
+          35VN98eebgSby/N65jiLnIbVY0+kmwkF35dAgrQkprMloxOCJL7T2/6ZUPJxDZ1GJDa6f
+          6FJRWqzFBvN3IeDL8VqCl0zSuwtfcwMBn/PSsv+XV4nDNDDmstAeEtHaDexVeAFqwE+q9
+          3nrb5i75s61EsvBoUDrHNHhkNNsnTf2gauAEYoRU0BZuCkHiE0TWJfJz8QWhCX1iM26e6
+          hKTuFLl9YJBdlyqFoXjdY+58CYIyGPAp++51UIfcUxMMJsLxWbv2vlXR3iYnWGn1p64Yr
+          /Ejrocp4+qtxUf8PpbKNRBdZWUnefC6Iy5q6+DgHzBkKwSAT5TBc2SPsxC5y3dlmrrBCd
+          08Y5ujQlj3UObXr3xNyDU4eX+RhSRXRwvE1AKT/yk+Wwx4eCUZxGlCVA9K2BGMKJj4Mn1
+          V7o3aVLHruh4IqVYU+r+jn+GHvjZwuPEpBipE2a3gRpd52f4pA0LRqEkdqaycs=
+      password: !encrypted/pkcs1-oaep
+        - iPDwpB46atSoUZBW2dAikJNLun1OYJb1PT9UqcEL7AnW5Rtg1tCqCsgGHAJWy0kTqkgvw
+          sOk3HBu5GFioqrXKVDBARIz8k7kaTCJPAIu5jPYghHbJuUlE8VTtgCDJLMp+mLcXVHZMY
+          NbY95rxcdrDn2G1SEjRYNMscfKhEXvC+aRIa7L50QN/pPWFULk7+gty4UCNXxDk+oVQqo
+          lDnNbYw9Sl/4YsbmcpYo1M1iEbtb8bhnEWCJj8MZh8GhzEeYFO672ey3AmhSxhk6E7ErZ
+          lZNswFuiDJu6doS/CFE9UlHIDu+iM39/nTv8Cty0kYwL2tve/lulKoasCXVLjNbC2ekVN
+          SsUngVQXjRwfgHr3Tb2dCR884sTNLsTlFBdNiwdgNqJAmvyPldABFMRdAgeISXrLs18xT
+          fDVn3HSgXXrq7/6gWsEdvEcW3wsVHK6WtnnsbwQcKnl20uuUt4nrfMFaLZTVsNCy2XRW8
+          wQqb129C2JofXOEm1lgFODF0uenMi8wS7j2ZqdsiI6aFnOKnORMEMvQsYvoWuKmBS9/ha
+          /6iYCY1pWOzgj/In8QaiE1iMFZ9ZySssucHFjXM/Z3Reh3dmjgW64pEYLyv4tZ4CjwSv9
+          dbZQp36ITppxhz/mEsWzS2H8yHawTmzGJdtomntWWdA2AIBFvVv+YMc8CaSQMU=
+      domain_name: !encrypted/pkcs1-oaep
+        - WSiK1g1i5Z01fyX9MEXkc1eUuY3Bmxd/lnQ6yAeTXRcNxPpmzvepMWqf3Y+W1xJ2GEmgE
+          NWGaDDTE0Zc+SXNqlr4miCWXgo9kd1qXu2aNp+kiEMwPW1BjrNgZ7+KmlktkMn8mHs9O2
+          LFluNh0zESgoawJ1gCGgl4X0t3ZhkyU7LAtg317k9klUb/zXFbUg2jVI/erL2urkj95UP
+          c/UPGpA/F8nCHotvFH9RSYH9oftndT/dMndUJXOkz58ffd+fItSXNnP566Igj4AWleGc5
+          QXQW+AHugQKoCatUUnlEJPq5URy/jfWV8AMKSsrqCYei4MvWVk5hJs+7Y6d6gErWYRLQQ
+          QeS+Msyj+iCKGKRhy0SDLk7aITcUPE+dYKrr7KB8xQWP77trJ6ccSDRVmkwC6el0CVoKl
+          e6TT7QPbFyhsuC84OH5tS+1XqCkjec9ng2M9RxPKP23nkizHOMQugPVrIizl2hTidpEPf
+          H+4RB9QxAOUrAsLRfpHpUSeh9PQHOvnhk3IjGgn2P7QCdOLlQ3CBSGuo0aoGnrZmGbbsq
+          pyYqUC6xHAr3xytHP1cVnb8m3gxhZT3N/HYkn1oXW+sTqJf46jP9mc4ldz7AvIdCKBLF6
+          GAzboVL2rvweYActRySXxTeLt+xn7/dwrviKDBZvrlFuvTF2sDAhamk4Yjm738=
+      project_name: !encrypted/pkcs1-oaep
+        - Fh08rFe3UqS2vf1O8aBkAELd6cAU6am/3i34r81fxyuMnZaTqa1xuN7y9v7oR9MyQLfV4
+          Z0d223ojZu83xD+nTIHT1XIyRKhCoJAd8/NGranXs/abADl96eFphT91iCGaT/3LP7lZP
+          5Ep21Ly+QbFifoT6d+d//MzB6cGrz72nCz70wHMHxj6OtBKt+wIeyQlJp45SOCcFDV6vA
+          jO52TQNWlCZng+sH3obQTGZR6DJKWhIv0Cfyk+vRnYOxLBqbqp0QCkwWkQqKQXuDBrCNt
+          ooKD6+SofaxqtpnirP7znfXYNOSSVTo8XckoS+YoidMupCX6YY5IbyQKWVXWcLFD4RSMu
+          ulBLTzTRpyNnydT7Q+YVeBNdqjONaQdnNg4zYLDkMr19ckNr9CTICXYM5v26H9ITI+EWi
+          aiHHENtUi9IkMmo1F9Hv9WSHg9GwaLFb9oB7j8vSAN/IzCZ9fmCXSsDrf2slTcN1IA7Vm
+          is8LoG+At6BKdReUvFGp5p+4070hkkfg/o1vr/aZXNpxCIQl5oxfOBPEexQgtdllzlwXF
+          SvVZCIx9KxWgrFPVIjGjJg+0Mr6aJnXFOroF8FyPyI8zvEtEex/rt+QZeIJuRtolmzm7+
+          s6ChRWCU3etscvXoKnGqfvowVqIQ1yUMd2equS3/ojtqXtz32zRICPv2aJnFJE=
+
+- job:
+    name: rancher-integration-latest
+    parent: rancher-integration-base
+    description: |
+      Run full integration tests
+    secrets:
+      - name: rancher_creds
+        secret: rancher-func-creds
+        pass-to-parent: true
+    vars:
+      tox_envlist: integration
+
+- job:
+    name: rancher-integration-devel
+    parent: rancher-integration-devel-base
+    description: |
+      Run full integration tests
+    secrets:
+      - name: rancher_creds
+        secret: rancher-func-creds
+        pass-to-parent: true
+    vars:
+      tox_envlist: integration
+
+- project:
+    merge-mode: squash-merge
+    check:
+      jobs:
+        - otc-tox-pep8
+        - rancher-register-driver-latest
+        - rancher-register-driver-devel
+    check-post:
+      jobs:
+        - otc-tox-pep8
+        - rancher-integration-devel
+    gate:
+      jobs:
+        - otc-tox-pep8
+        - rancher-integration-devel

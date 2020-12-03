@@ -1,19 +1,24 @@
 ---
 - hosts: all
-  tasks:
-    - name: Install binary dependencies
-      include_role:
-        name: bindep
-      vars:
-        bindep_dir: "{{ zuul_work_dir }}"
-      when: tox_install_bindep | default(true)
-
-- hosts: all
   roles:
     - ensure-python
-    - ensure-virtualenv
-    - ensure-pip
     - ensure-docker
-    - ensure-go
-    - ensure-goreleaser
-    - ensure-javascript-build-tool
+
+- hosts: all
+  tasks:
+    - name: set fact
+      set_fact:
+        cacheable: true
+        tox_environment: "{{ tox_environment | default({}) | combine({'RANCHER_BIND_HOST': ansible_host}) }}"
+
+    - name: Deploy rancher/selenium
+      include_role:
+        name: prepare-rancher-env
+      vars:
+        rancher_password: dummy_pass
+
+    - name: alter env
+      set_fact:
+        cacheable: true
+        tox_environment: "{{ tox_environment | default({}) | combine({'OS_DOMAIN_NAME': rancher_creds.domain_name, 'OS_PROJECT_NAME': rancher_creds.project_name, 'OS_USER_NAME': rancher_creds.username, 'OS_PASSWORD': rancher_creds.password}) }}"
+      when: rancher_creds is defined

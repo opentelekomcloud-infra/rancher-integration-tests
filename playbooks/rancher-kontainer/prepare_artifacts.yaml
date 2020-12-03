@@ -1,0 +1,26 @@
+---
+- hosts: all
+  roles:
+    - ensure-python
+    - ensure-go
+    - ensure-goreleaser
+    - ensure-javascript-build-tool
+
+- hosts: all
+  tasks:
+
+    - name: Prepare Kontainer artifacts
+      include_role:
+        name: prepare-rancher-kontainer-artifacts
+      vars:
+        prepare_artifacts_dir: "{{ ansible_user_dir }}/artifacts"
+
+    - name: Construct Driver links
+      set_fact:
+        rancher_driver_location: "http://{{ ansible_host }}:8080/{{ rancher_kontainer_engine_tarball_base }}"
+        rancher_ui_location: "http://{{ ansible_host }}:8080/ui/component.js"
+
+    - name: Alter ENV for tox
+      set_fact:
+        tox_environment: "{{ tox_environment | default({}) | combine({'DRIVER_LOCATION': rancher_driver_location, 'DRIVER_UI_LOCATION': rancher_ui_location}) }}"
+        cacheable: true
