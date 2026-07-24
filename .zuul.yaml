@@ -7,11 +7,14 @@
       Prepare Rancher/Selenium
     pre-run: playbooks/rancher-kontainer/pre.yaml
     abstract: true
-    nodeset: ubuntu-focal
+    # eco2 has no VM/docker node — only Kubernetes pods. The privileged
+    # `zuul-debian-builder` pod ships podman, which we expose via a
+    # Docker-compatible API socket so the Rancher + Selenium containers can
+    # run without a VM. See playbooks/rancher-kontainer/pre.yaml.
+    nodeset: zuul-debian-builder
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
-      python_version: 3.8
 
 - job:
     name: rancher-integration-devel-base

@@ -1,10 +1,38 @@
 ---
+# eco2 has no VM / Docker daemon (only Kubernetes pods). We run on the
+# privileged `zuul-debian-builder` pod, which provides podman. Instead of a
+# Docker daemon we start podman's Docker-compatible API service and point the
+# existing `docker_container` tasks at it via DOCKER_HOST, so Rancher +
+# Selenium containers run without a VM.
 - hosts: all
   roles:
     - ensure-python
-    - ensure-docker
+  tasks:
+    - name: Ensure podman is available
+      ansible.builtin.command: podman --version
+      changed_when: false
+
+    - name: Start podman Docker-compatible API service
+      ansible.builtin.shell: >
+        nohup podman system service --time=0
+        unix:///run/podman/podman.sock >/tmp/podman-api.log 2>&1 &
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Wait for the podman API socket
+      ansible.builtin.wait_for:
+        path: /run/podman/podman.sock
+        timeout: 30
+
+    - name: Expose DOCKER_HOST to tox
+      set_fact:
+        cacheable: true
+        tox_environment: "{{ tox_environment | default({}) | combine({'DOCKER_HOST': 'unix:///run/podman/podman.sock'}) }}"
 
 - hosts: all
+  environment:
+    DOCKER_HOST: "unix:///run/podman/podman.sock"
   tasks:
     - name: set fact
       set_fact:
