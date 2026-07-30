@@ -12,12 +12,12 @@
 # so Ansible's interpreter is known without ensure-python.
 - hosts: all
   tasks:
-    - name: Install podman + which (Debian python-tox image ships neither)
+    - name: Install podman + which + python packaging (python-tox image ships none)
       ansible.builtin.shell: |
         set -e
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-        apt-get install -y --no-install-recommends podman which
+        apt-get install -y --no-install-recommends podman which python3-packaging
       args:
         executable: /bin/bash
       changed_when: true
