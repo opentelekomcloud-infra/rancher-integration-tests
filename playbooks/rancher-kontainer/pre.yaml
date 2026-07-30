@@ -5,16 +5,19 @@
 # Docker-compatible API service and point the existing `docker_container`
 # tasks at it via DOCKER_HOST, so Rancher + Selenium containers run without
 # a VM.
+# NOTE: do NOT use the `ensure-python` role here. Its "Get python3 path"
+# task shells out to `which`, which the Debian python-tox image does not
+# ship, so it fails before anything is installed. The image already has
+# python3 at /usr/bin/python3 and the nodepool label sets `python-path`,
+# so Ansible's interpreter is known without ensure-python.
 - hosts: all
-  roles:
-    - ensure-python
   tasks:
-    - name: Install podman (Debian python-tox image ships no container runtime)
+    - name: Install podman + which (Debian python-tox image ships neither)
       ansible.builtin.shell: |
         set -e
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-        apt-get install -y --no-install-recommends podman
+        apt-get install -y --no-install-recommends podman which
       args:
         executable: /bin/bash
       changed_when: true
