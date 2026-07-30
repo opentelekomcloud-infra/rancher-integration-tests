@@ -3,7 +3,7 @@
 rancher_image: rancher/rancher:v2.4.8
 selenium_chrome_image: selenium/standalone-chrome:latest
 
-bind_host: "{{ ansible_default_ipv4.address }}"
+bind_host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
 rancher_port: 8003
 selenium_port: 8004
 rancher_password: dummy_pass
