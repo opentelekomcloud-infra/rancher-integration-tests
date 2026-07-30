@@ -1,15 +1,5 @@
 ---
 
-# Nodeset for the Rancher functional jobs. Maps to the `zuul-debian-podman`
-# nodepool label (a privileged Debian python-tox pod with the vfs storage
-# driver) defined in system-config. podman itself is installed at job
-# runtime by playbooks/rancher-kontainer/pre.yaml.
-- nodeset:
-    name: zuul-debian-podman
-    nodes:
-      - name: podman
-        label: zuul-debian-podman
-
 - job:
     name: rancher-integration-base
     parent: tox
@@ -18,11 +8,18 @@
     pre-run: playbooks/rancher-kontainer/pre.yaml
     abstract: true
     # eco2 has no VM/docker node — only Kubernetes pods. The privileged
-    # Debian `zuul-debian-podman` pod provides podman (installed in pre-run),
-    # which we expose via a Docker-compatible API socket so the Rancher +
-    # Selenium containers can run without a VM. See
-    # playbooks/rancher-kontainer/pre.yaml.
-    nodeset: zuul-debian-podman
+    # Debian python-tox pod (nodepool label `zuul-debian-podman`, defined
+    # in system-config) provides podman (installed in pre-run), which we
+    # expose via a Docker-compatible API socket so the Rancher + Selenium
+    # containers can run without a VM. See playbooks/rancher-kontainer/pre.yaml.
+    # Use an inline nodeset (not a named one) — a named nodeset defined in
+    # this untrusted repo was not being resolved by the job ("nodeset not
+    # found"); an inline nodeset is always in scope and is inherited by the
+    # child jobs below.
+    nodeset:
+      nodes:
+        - name: podman
+          label: zuul-debian-podman
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
