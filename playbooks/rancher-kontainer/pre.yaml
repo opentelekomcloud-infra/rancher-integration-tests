@@ -12,12 +12,12 @@
 # so Ansible's interpreter is known without ensure-python.
 - hosts: all
   tasks:
-    - name: Install podman + which + sudo + python packaging (python-tox image ships none)
+    - name: Install podman + which + sudo + python deps (python-tox image ships none)
       ansible.builtin.shell: |
         set -e
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-        apt-get install -y --no-install-recommends podman which sudo python3-packaging
+        apt-get install -y --no-install-recommends podman which sudo python3-packaging python3-requests
       args:
         executable: /bin/bash
       changed_when: true
