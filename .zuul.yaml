@@ -23,6 +23,9 @@
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
+      # serve-artifacts role runs `python{{ python_version }} -m http.server`
+      # to serve the built driver tarball; define it (python3 exists on the pod).
+      python_version: "3"
       # The zuul-debian-podman pod's HOME (~) is not usable for Ansible's
       # default remote_tmp (~/.ansible/tmp) in the tox base playbook, causing
       # "Failed to create temporary directory ... unreachable". Root the

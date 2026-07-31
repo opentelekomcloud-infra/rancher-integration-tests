@@ -1,5 +1,5 @@
 pytest
-selenium
+selenium<4.10
 flake8
 flake8-quotes
 requests>=2.24.0,<3
