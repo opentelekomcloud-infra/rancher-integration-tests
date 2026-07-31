@@ -13,11 +13,20 @@
 - hosts: all
   tasks:
     - name: Install podman + which + sudo + python deps (python-tox image ships none)
+      # All apt/dpkg output is redirected to a log and dpkg's pty progress is
+      # disabled (Dpkg::Use-Pty=0). Over the kubectl-exec connection the noisy
+      # apt progress stream (carriage returns) corrupts the Ansible module's
+      # JSON return and surfaces as a MODULE FAILURE. Keeping stdout empty on
+      # success avoids that; the log is printed only if apt actually fails.
       ansible.builtin.shell: |
-        set -e
+        set -eo pipefail
         export DEBIAN_FRONTEND=noninteractive
-        apt-get update
-        apt-get install -y --no-install-recommends podman which sudo python3-packaging python3-requests
+        log=/tmp/apt-install.log
+        {
+          apt-get update -qq -o Dpkg::Use-Pty=0
+          apt-get install -y -qq -o Dpkg::Use-Pty=0 --no-install-recommends \
+            podman which sudo python3-packaging python3-requests
+        } >"$log" 2>&1 || { echo "apt failed:"; cat "$log"; exit 1; }
       args:
         executable: /bin/bash
       changed_when: true
