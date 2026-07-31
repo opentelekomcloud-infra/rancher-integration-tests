@@ -23,6 +23,11 @@
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
+      # The zuul-debian-podman pod's HOME (~) is not usable for Ansible's
+      # default remote_tmp (~/.ansible/tmp) in the tox base playbook, causing
+      # "Failed to create temporary directory ... unreachable". Root the
+      # remote tmp in /tmp (world-writable, sticky) as Ansible suggests.
+      ansible_remote_tmp: /tmp/.ansible/tmp
 
 - job:
     name: rancher-integration-devel-base
