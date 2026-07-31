@@ -41,6 +41,11 @@
       # Building ui driver
       node_version: 14
       kontainer_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/kontainer-engine-driver-otc'].src_dir }}"
+      # Pin goreleaser to the last v1 release. ensure-goreleaser otherwise
+      # downloads latest (v2.x), which removed the `--rm-dist` flag used by
+      # the shared goreleaser role (now `--clean`) and rejects v1 config
+      # files, so `goreleaser --snapshot --rm-dist` fails instantly (rc=1).
+      goreleaser_version: "v1.26.2"
     required-projects:
       - opentelekomcloud/kontainer-engine-driver-otc
 
