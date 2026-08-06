@@ -11,7 +11,7 @@
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
-      python_version: 3.8
+      python_version: 3.11
 
 - job:
     name: rancher-integration-devel-base
