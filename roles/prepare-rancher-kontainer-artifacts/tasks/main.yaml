@@ -24,12 +24,14 @@
   vars:
     zuul_work_dir: "{{ ui_project_src_dir }}"
     js_build_command: "build"
+  when: ui_project_src_dir | length > 0
 
 - name: Find UI dist in artifacts directory
   find:
     file_type: file
     paths: "{{ ui_project_src_dir }}/dist"
-  register: result
+  register: result_ui
+  when: ui_project_src_dir | length > 0
 
 - name: Create artifacts folder
   file:
@@ -55,6 +57,7 @@
     src: "{{ ui_project_src_dir }}/dist/"
     dest: "{{ prepare_artifacts_dir }}/ui"
     remote_src: true
+  when: ui_project_src_dir | length > 0
 
 - name: Find artifacts
   find:

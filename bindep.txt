@@ -1,4 +1,5 @@
 build-essential [platform:dpkg]
+sudo [platform:dpkg]
 python-dev [platform:dpkg]
 python-devel [platform:rpm]
 libffi-dev [platform:dpkg]

@@ -11,7 +11,7 @@
     vars:
       rancher_image: rancher/rancher:v2.4.8
       tox_envlist: register
-      python_version: 3.8
+      python_version: 3.11
 
 - job:
     name: rancher-integration-devel-base
@@ -25,10 +25,9 @@
       # Building ui driver
       node_version: 14
       kontainer_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/kontainer-engine-driver-otc'].src_dir }}"
-      ui_project_src_dir: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/opentelekomcloud/ui-cluster-driver-otc'].src_dir }}"
+      ui_project_src_dir: ""
     required-projects:
       - opentelekomcloud/kontainer-engine-driver-otc
-      - opentelekomcloud/ui-cluster-driver-otc
 
 - job:
     name: rancher-register-driver-latest
