@@ -1,10 +1,67 @@
 ---
+# eco2 has no VM / Docker daemon (only Kubernetes pods). We run on the
+# privileged Debian `zuul-debian-podman` pod. The Debian python-tox image
+# ships no container runtime, so we install podman here, then start podman's
+# Docker-compatible API service and point the existing `docker_container`
+# tasks at it via DOCKER_HOST, so Rancher + Selenium containers run without
+# a VM.
+# NOTE: do NOT use the `ensure-python` role here. Its "Get python3 path"
+# task shells out to `which`, which the Debian python-tox image does not
+# ship, so it fails before anything is installed. The image already has
+# python3 at /usr/bin/python3 and the nodepool label sets `python-path`,
+# so Ansible's interpreter is known without ensure-python.
 - hosts: all
-  roles:
-    - ensure-python
-    - ensure-docker
+  tasks:
+    - name: Install podman + which + sudo + python deps (python-tox image ships none)
+      # All apt/dpkg output is redirected to a log and dpkg's pty progress is
+      # disabled (Dpkg::Use-Pty=0). Over the kubectl-exec connection the noisy
+      # apt progress stream (carriage returns) corrupts the Ansible module's
+      # JSON return and surfaces as a MODULE FAILURE. Keeping stdout empty on
+      # success avoids that; the log is printed only if apt actually fails.
+      ansible.builtin.shell: |
+        set -eo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        log=/tmp/apt-install.log
+        {
+          apt-get update -qq -o Dpkg::Use-Pty=0
+          apt-get install -y -qq -o Dpkg::Use-Pty=0 --no-install-recommends \
+            podman which sudo python3-packaging python3-requests
+        } >"$log" 2>&1 || { echo "apt failed:"; cat "$log"; exit 1; }
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Ensure podman is available
+      ansible.builtin.command: podman --version
+      changed_when: false
+
+    - name: Ensure the podman API socket directory exists
+      ansible.builtin.file:
+        path: /run/podman
+        state: directory
+        mode: "0755"
+
+    - name: Start podman Docker-compatible API service
+      ansible.builtin.shell: >
+        nohup podman system service --time=0
+        unix:///run/podman/podman.sock >/tmp/podman-api.log 2>&1 &
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Wait for the podman API socket
+      ansible.builtin.wait_for:
+        path: /run/podman/podman.sock
+        timeout: 30
+
+    - name: Expose DOCKER_HOST to tox
+      set_fact:
+        cacheable: true
+        tox_environment: "{{ tox_environment | default({}) | combine({'DOCKER_HOST': 'unix:///run/podman/podman.sock'}) }}"
 
 - hosts: all
+  environment:
+    DOCKER_HOST: "unix:///run/podman/podman.sock"
   tasks:
     - name: set fact
       set_fact:

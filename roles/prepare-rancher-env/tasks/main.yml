@@ -16,8 +16,8 @@
     protocol: tcp
     destination_port: "{{ zj_port }}"
   loop:
-    - 8003
-    - 8080
+    - 443
+    - 4444
   loop_control:
     loop_var: zj_port
   tags:
@@ -27,8 +27,12 @@
   docker_container:
     name: rancher
     image: "{{ rancher_image }}"
-    published_ports:
-      - "{{ rancher_port }}:443"
+    # Use host networking: inside the zuul-debian-podman pod, podman's CNI
+    # bridge cannot append the POSTROUTING NAT rule (iptables-nft in the
+    # nested netns fails with "RULE_APPEND ... Invalid argument"), so
+    # published_ports/port-mapping is impossible. Host networking skips CNI
+    # entirely; Rancher binds its native 443 directly on the pod's netns.
+    network_mode: host
     # container_default_behavior: no_defaults
     restart_policy: unless-stopped
     detach: yes
@@ -42,8 +46,9 @@
   docker_container:
     name: selenium-chrome
     image: "{{ selenium_chrome_image }}"
-    published_ports:
-      - "{{ selenium_port }}:4444"
+    # Host networking for the same CNI-NAT reason as Rancher; Selenium binds
+    # its native 4444 on the pod's netns.
+    network_mode: host
     # container_default_behavior: no_defaults
     restart_policy: unless-stopped
     detach: yes

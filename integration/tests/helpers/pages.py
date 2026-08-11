@@ -75,6 +75,11 @@ class ClusterDriversListPage(Page):
 
     @on_page
     def click_add_cluster_driver(self):
+        # Rancher's Ember UI can take noticeably longer than pyasli's 5s
+        # default to render the cluster-drivers page and its action button
+        # inside the CI pod. Wait explicitly for the button before clicking
+        # so the step doesn't fail intermittently with a 5s TimeoutError.
+        self._add_driver.assure(visible, 30)
         self._add_driver.click()
 
     # register dialog

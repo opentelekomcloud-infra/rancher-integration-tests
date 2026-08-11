@@ -1,7 +1,7 @@
 pytest
-selenium
+selenium<4.10
 flake8
 flake8-quotes
 requests>=2.24.0,<3
-wrapt>=1.12,<1.13
+wrapt>=1.14.1
 pyasli>=0.2.8b5,<0.3
